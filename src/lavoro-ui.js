@@ -162,7 +162,7 @@ function vLavRilev(){
     ['Scegli «Arrivo»','Tocca <b>Arrivo</b>, poi <b>Posizione › Scegli</b> e cerca «Via Borgomanero 44, Paruzzaro». Riduci il cerchio al minimo (circa 100 m) e tocca <b>Fine</b>. Lascia «Qualsiasi ora».'],
     ['Esegui subito','Seleziona <b>Esegui immediatamente</b> (e disattiva «Notifica quando eseguito» se non la vuoi), poi <b>Avanti</b> › <b>Nuova automazione vuota</b>.'],
     ['Aggiungi l\'azione','Cerca l\'azione <b>Ottieni contenuti dell\'URL</b>. Al posto di «URL» incolla l\'indirizzo per l\'<b>arrivo</b> che copi qui sotto. Tocca <b>Fine</b>.'],
-    ['Ripeti per l\'uscita','Crea un\'altra automazione uguale scegliendo <b>Esco da</b> invece di Arrivo, e incolla l\'indirizzo per l\'<b>uscita</b>.'],
+    ['Ripeti per l\'uscita','Crea un\'altra automazione uguale scegliendo l\'opzione di <b>uscita</b> dal luogo (la voce accanto ad Arrivo) invece di Arrivo, e incolla l\'indirizzo per l\'<b>uscita</b>.'],
     ['Consenti la posizione','In Impostazioni › Privacy › Localizzazione › Comandi rapidi scegli <b>Sempre</b> e lascia attiva la <b>Posizione esatta</b>.']];
   const step=passi.map((s,i)=>`<li><b class="n">${i+1}</b><span><b>${s[0]}</b><span class="small muted">${s[1]}</span></span></li>`).join('');
   return header('Lavoro',{month:false,badge:false,h:'Rilevamento automatico'})+
