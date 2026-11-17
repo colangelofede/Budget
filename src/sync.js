@@ -21,8 +21,16 @@ function rawToD(raw){
     if(x.gruppo){o.gruppo=st(x.gruppo);o.quota=st(x.quota);o.totale=nz(x.totale)}return o});
   const previsioni=(raw.previsioni||[]).filter(x=>x.id).map(x=>{const eff={};MB_.forEach((m,i)=>{const v=nz(x['Eff '+m]);if(v!=null)eff[String(i+1)]=v});
     return {id:st(x.id),scadenza:x.scadenza===true||String(x.scadenza).toUpperCase()==='TRUE',anno:nz(x.anno),categoria:st(x.categoria),descrizione:st(x.descrizione),tipo:st(x.tipo)||'certo',giorno:nz(x.giorno),metodo:x.metodo?st(x.metodo):null,serie:x.serie?st(x.serie):null,freq:nz(x.freq),rate:x.rate===true||String(x.rate).toUpperCase()==='TRUE',origine:x.origine?st(x.origine):null,importi:MB_.map(m=>nz(x[m])),effettivi:eff}});
-  const stipendi=(raw.stipendi||[]).filter(x=>x.id).map(x=>({id:st(x.id),anno:nz(x.anno),mese:nz(x.mese),netto:nz(x.netto),lordo:nz(x.lordo),stato:st(x.stato)||'confermato'}));
-  return {config:{nome:APP_NOME,categorie,entrate,metodi,riporti},movimenti,previsioni,stipendi};
+  const stipendi=(raw.stipendi||[]).filter(x=>x.id).map(x=>({id:st(x.id),anno:nz(x.anno),mese:nz(x.mese),netto:nz(x.netto),lordo:nz(x.lordo),stato:st(x.stato)||'confermato',s30b:nz(x.s30b),s40b:nz(x.s40b),s50b:nz(x.s50b),s70b:nz(x.s70b)}));
+  // sezione Lavoro (fogli Ore, Timbrature, Lavoro, Voci, Saldi)
+  const dIso=v=>{const t=st(v);return /^\d{4}-\d{2}-\d{2}/.test(t)?t.slice(0,10):t};
+  const hm=v=>{const t=st(v);const m=t.match(/(\d{1,2}):(\d{2})/);return m?m[1].padStart(2,'0')+':'+m[2]:(t||null)};
+  const ore=(raw.ore||[]).filter(x=>x.id).map(x=>({id:dIso(x.id),tipo:st(x.tipo)||'lavoro',entrata:x.entrata?hm(x.entrata):null,uscita:x.uscita?hm(x.uscita):null,pausa:nz(x.pausa),s30:nz(x.s30),s40:nz(x.s40),s50:nz(x.s50),s70:nz(x.s70),manuale:x.manuale,trasferta:x.trasferta?st(x.trasferta):null,mensa:x.mensa,extra:nz(x.extra),notte:nz(x.notte),oreass:nz(x.oreass),stima:x.stima,nota:st(x.nota)}));
+  const timbrature=(raw.timbrature||[]).filter(x=>x.id).map(x=>({id:st(x.id),data:dIso(x.data),ora:hm(x.ora),evento:st(x.evento)}));
+  const lavoro=(raw.lavoro||[]).filter(x=>x.id).map(x=>Object.assign({},x,{id:st(x.id),dal:st(x.dal).slice(0,7)}));
+  const voci=(raw.voci||[]).filter(x=>x.id).map(x=>({id:st(x.id),anno:nz(x.anno),mese:nz(x.mese),descrizione:st(x.descrizione),importo:nz(x.importo)||0,noinps:x.noinps}));
+  const saldi=(raw.saldi||[]).filter(x=>x.id).map(x=>({id:st(x.id),anno:nz(x.anno),mese:nz(x.mese),ferie:nz(x.ferie),rol:nz(x.rol),s30b:nz(x.s30b),s40b:nz(x.s40b),s50b:nz(x.s50b),s70b:nz(x.s70b)}));
+  return {config:{nome:APP_NOME,categorie,entrate,metodi,riporti},movimenti,previsioni,stipendi,ore,timbrature,lavoro,voci,saldi};
 }
 function prevToRow(d){const r={anno:d.anno,categoria:d.categoria,descrizione:d.descrizione,tipo:d.tipo,giorno:d.giorno??null,metodo:d.metodo??null,scadenza:!!d.scadenza,serie:d.serie??null,freq:d.freq??null,rate:!!d.rate,origine:d.origine??null};
   MB_.forEach((m,i)=>{r[m]=d.importi?d.importi[i]:null;const e=d.effettivi&&d.effettivi[String(i+1)];r['Eff '+m]=e==null?null:e});return r}
@@ -34,7 +42,7 @@ function configOps(c){return [
 
 // applica le operazioni alla copia locale (subito, anche offline)
 function applyLocal(raw,ops){
-  raw=JSON.parse(JSON.stringify(raw||{movimenti:[],previsioni:[],stipendi:[],categorie:[],metodi:[],riporti:[]}));
+  raw=JSON.parse(JSON.stringify(raw||{movimenti:[],previsioni:[],stipendi:[],categorie:[],metodi:[],riporti:[],ore:[],timbrature:[],lavoro:[],voci:[],saldi:[]}));
   ops.forEach(o=>{raw[o.col]=raw[o.col]||[];
     if(o.op==='replace'){raw[o.col]=o.rows.slice();return}
     const i=raw[o.col].findIndex(r=>String(r.id)===String(o.id));

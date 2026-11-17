@@ -73,21 +73,23 @@ function clean(o){const d=Object.assign({},o);delete d.id;return d}
 
 // ---------- render ----------
 let raf=0;function schedule(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;render()})}
-const VIEWS=['collega','home','dashboard','dettaglio','registro','analisi','entrate','altro','anno','prospetto','previsioni','categorie','simula','dati'];
+const VIEWS=['stallo',...LAV_VIEWS,'collega','home','dashboard','dettaglio','registro','analisi','entrate','altro','anno','prospetto','previsioni','categorie','simula','dati'];
 function tabOf(v){return v==='analisi'?'registro':v==='dettaglio'||v==='anno'?'dashboard':['home','dashboard','registro'].includes(v)?v:'altro'}
-function viewFn(){return {collega:vCollega,home:vHome,dashboard:vDashboard,anno:vAnno,dettaglio:vDettaglio,registro:vRegistro,analisi:vAnalisi,entrate:vEntrate,altro:vAltro,dati:vDati,prospetto:vProspetto,previsioni:vPrevisioni,categorie:vCategorie,simula:vSimula}[S.view]||vHome}
+function viewFn(){return {stallo:vStallo,lavoro:vLavoro,calendario:vCalendario,ferie:vFerie,lavaltro:vLavAltro,lavpar:vLavPar,lavvoci:vLavVoci,lavrilev:vLavRilev,lavbuste:vLavBuste,collega:vCollega,home:vHome,dashboard:vDashboard,anno:vAnno,dettaglio:vDettaglio,registro:vRegistro,analisi:vAnalisi,entrate:vEntrate,altro:vAltro,dati:vDati,prospetto:vProspetto,previsioni:vPrevisioni,categorie:vCategorie,simula:vSimula}[S.view]||vHome}
 // pagina di un altro mese, senza toccare lo stato (per lo swipe)
 function htmlMese(m){const o=S.mese;S.mese=m;try{return viewFn()()}finally{S.mese=o}}
 // la pagina scorre dentro #scr (così su iPhone non compare la barra di scorrimento)
 const SCR=()=>document.getElementById('scr')||document.scrollingElement;
 function render(){
   const v=document.getElementById('view');
-  document.querySelectorAll('.tabs a').forEach(a=>a.setAttribute('aria-current',a.dataset.v===tabOf(S.view)?'page':'false'));
+  renderTabs();
   if(!S.ready){v.innerHTML=stateScreen();return}
   if(!SYNC.api&&S.view!=='collega'){S.view='collega'}
   v.classList.remove('fit');
   v.innerHTML=viewFn()();
-  if(S.view==='home'&&cats().length)v.classList.add('fit'); // Home a pagina unica, senza scorrimento
+  if(S.view==='home'&&cats().length||S.view==='lavoro'||S.view==='stallo')v.classList.add('fit'); // Home a pagina unica, senza scorrimento
+  v.classList.toggle('st',S.view==='stallo');
+  if(S.ready&&SYNC.api&&SYNC.last&&!SYNC.err)chiediTrasferta();
   if(SYNC.api&&!S.chAsk&&chiusurePendenti().length){S.chAsk=true;let done=false;try{done=sessionStorage.getItem('budget-chask')==='1';sessionStorage.setItem('budget-chask','1')}catch(e){}if(!done)setTimeout(()=>{if(!document.querySelector('.sheet'))sheetChiusura()},900)}
 }
 function stateScreen(){
@@ -174,7 +176,7 @@ function homeHd(){
   const eye=S.priv?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const modeIcon=S.mode==='dark'?ICON.moon:S.mode==='light'?ICON.sun:ICON.auto;
   const modeLbl=S.mode==='dark'?'Tema scuro, tocca per automatico':S.mode==='light'?'Tema chiaro, tocca per scuro':'Tema automatico, tocca per chiaro';
-  return `<div class="hh"><a class="hh-av" href="#altro" aria-label="Altro e impostazioni">${APP_INIZIALI}</a><div class="hh-m"><button class="ghost" data-act="mprev" aria-label="Mese precedente" ${S.mese<=1?'disabled':''}>${ICON.prev}</button><button class="ml" data-act="pickyear" aria-label="${MESI[S.mese-1]} ${S.anno}, tocca per cambiare anno">${MESI[S.mese-1]} ${S.anno}</button><button class="ghost" data-act="mnext" aria-label="Mese successivo" ${S.mese>=12?'disabled':''}>${ICON.next}</button></div><button class="icon-btn" data-act="priv" aria-pressed="${S.priv}" aria-label="${S.priv?'Mostra gli importi':'Nascondi gli importi'}">${eye}</button><button class="icon-btn" data-act="mode" aria-label="${modeLbl}">${modeIcon}</button></div>`+
+  return `<div class="hh"><a class="hh-av" href="#stallo" aria-label="Torna alla scelta Lavoro o Budget">${APP_INIZIALI}</a><div class="hh-m"><button class="ghost" data-act="mprev" aria-label="Mese precedente" ${S.mese<=1?'disabled':''}>${ICON.prev}</button><button class="ml" data-act="pickyear" aria-label="${MESI[S.mese-1]} ${S.anno}, tocca per cambiare anno">${MESI[S.mese-1]} ${S.anno}</button><button class="ghost" data-act="mnext" aria-label="Mese successivo" ${S.mese>=12?'disabled':''}>${ICON.next}</button></div><button class="icon-btn" data-act="priv" aria-pressed="${S.priv}" aria-label="${S.priv?'Mostra gli importi':'Nascondi gli importi'}">${eye}</button><button class="icon-btn" data-act="mode" aria-label="${modeLbl}">${modeIcon}</button></div>`+
    (nDc?`<button class="dc-badge hh-badge" data-act="godaconf">${nDc} ${nDc===1?'voce':'voci'} da confermare</button>`:'');
 }
 function heroRing(y,m,mi){
@@ -544,6 +546,7 @@ function vAltro(){
   const azione=(act,t,sub)=>`<button class="item" data-act="${act}" data-k="${nx}"><span class="grow"><span class="t">${t}</span><span class="s">${sub}</span></span><span class="chev">${ICON.chev}</span></button>`;
   const gruppo=(tit,righe)=>`<p class="sec-title">${tit}</p><section class="card tight menu"><div class="list">${righe.join('')}</div></section>`;
   return header('Altro',{month:false,h:'Altro'})+
+   gruppo('Sezioni',[link('lavoro','Lavoro','Ore, straordinari, trasferte, busta stimata, ferie e ROL'),link('stallo','Schermata iniziale','Scelta tra Lavoro e Budget')])+
    gruppo('Prospetti '+S.anno,[
      link('prospetto','Prospetto Uscite','Categorie mese per mese, saldo e avanzo'),
      link('entrate','Prospetto Entrate','Stipendi, 13ª e 14ª, entrate spot, tasse, riporto')])+
@@ -970,7 +973,9 @@ async function creaAnno(n){
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b||b.closest('#sheet'))return;
   const a=b.dataset.act,id=b.dataset.id,k=b.dataset.k;
+  if(lavAct(a,id,k))return;
   switch(a){
+    case 'fab':if(S.ready&&SYNC.api)sheetAdd('uscita');break;
     case 'mprev':if(S.mese>1){S.mese--;render()}break;
     case 'mnext':if(S.mese<12){S.mese++;render()}break;
     case 'priv':S.priv=!S.priv;try{localStorage.setItem('budget-priv',S.priv?'1':'')}catch(e){}applyPriv();render();break;
@@ -1019,7 +1024,7 @@ document.addEventListener('click',async e=>{
     case 'seticona':S.icona=k;saveIcona();render();break;
     case 'pickyear':sheetAnno();break;
     case 'setanno':setAnno(+k);break;
-    case 'anno':S.anno=+k;S.mese=S.anno===today().getFullYear()?today().getMonth()+1:1;if(S.view!=='home')location.hash='#home';else render();break;
+    case 'anno':S.anno=+k;S.mese=S.anno===today().getFullYear()?today().getMonth()+1:1;if(sezione()==='lavoro')render();else if(S.view!=='home')location.hash='#home';else render();break;
     case 'creaanno':creaAnno(+k);break;
     case 'annullaanno':annullaAnno(+k);break;
     case 'simspesa':sheetSimSpesa();break;
@@ -1042,9 +1047,10 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('change',e=>{const t=e.target;if(!t.dataset)return;if(t.dataset.change==='an-da'){S.an.da=t.value;render()}if(t.dataset.change==='an-a'){S.an.a=t.value;render()}if(t.dataset.change==='regcat'){S.regCat=t.value;render()}if(t.dataset.change==='regmet'){S.regMet=t.value;render()}});
 function saveMode(){try{localStorage.setItem('budget-mode',S.mode)}catch(e){}applyMode();render()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetClose)sheetClose()});
-function route(){const h=(location.hash||'#home').slice(1);S.view=VIEWS.includes(h)?h:'home';if(sheetClose)sheetClose();render();SCR().scrollTo(0,0)}
+let _primaRoute=true;
+function route(){if(_primaRoute){_primaRoute=false;if(location.hash!=='#stallo'){history.replaceState(null,'','#stallo')}}const h=(location.hash||'#stallo').slice(1);S.view=VIEWS.includes(h)?h:'home';if(sheetClose)sheetClose();render();SCR().scrollTo(0,0)}
 window.addEventListener('hashchange',route);
-document.getElementById('fab').onclick=()=>{if(S.ready&&SYNC.api)sheetAdd('uscita')};
+
 route();start();
 
 // ---------- esportazione ----------
@@ -1246,7 +1252,7 @@ function sheetGruppo(g){
 (function(){
   const v=document.getElementById('view');let t=null,gh=null;const GAP=24;
   const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const ok=()=>['home','dashboard','registro','dettaglio'].includes(S.view)&&!sheetClose&&S.ready;
+  const ok=()=>['home','dashboard','registro','dettaglio','lavoro','calendario','lavpar'].includes(S.view)&&!sheetClose&&S.ready;
   const clear=()=>{v.style.transition='';v.style.transform='';if(gh){gh.remove();gh=null}};
   // pagina accanto (mese prima a sinistra, mese dopo a destra)
   const ghost=d=>{if(gh&&gh._d===d)return gh;if(gh)gh.remove();const r=v.getBoundingClientRect();

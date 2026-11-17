@@ -1,5 +1,5 @@
 import re
-css=open('style.css').read(); calc=open('calc.js').read().split("if(typeof module")[0]
+css=open('style.css').read(); calc=open('calc.js').read().split("if(typeof module")[0]; lav=open('lavoro.js').read().split("if(typeof module")[0]; lavui=open('lavoro-ui.js').read()
 exp=open('export.js').read().split("if(typeof module")[0]; sync=open('sync.js').read(); NOME=re.search(r"const APP_NOME='(.*?)'",sync).group(1); app=open('app.js').read()
 m=re.search(r"const ICON=\{(.*?)\n\};",app,re.S).group(1)
 ic=lambda n: re.search(n+r":'(.*?)'",m).group(1)
@@ -41,7 +41,9 @@ html=f'''<!DOCTYPE html>
 <div class="toast" id="toast" role="status" hidden></div>
 <script>
 {calc}
+{lav}
 {exp}
+{lavui}
 {app.replace("route();start();","")}
 {sync}
 route();start();

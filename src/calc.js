@@ -21,12 +21,13 @@ function istanze(D,anno,oggi){
   });
   return out;
 }
-// Netti 1..12, 13 (13ª, Dicembre), 14 (14ª, Luglio): reali o simulati dall'anno precedente
+// Netti 1..12, 13 (13ª, Dicembre), 14 (14ª, Luglio): reali, stimati dalla sezione Lavoro (ore), o simulati dall'anno precedente
 function nettiAnno(D,anno){
   const res={};
   for(let m=1;m<=14;m++){
     const s=(D.stipendi||[]).find(x=>x.anno===anno&&x.mese===m);
     if(s){res[m]={netto:+s.netto,lordo:s.lordo==null?null:+s.lordo,stato:s.stato||'confermato',doc:s};continue}
+    if(m<=12&&typeof stimaNettoLav==='function'){const L=stimaNettoLav(D,anno,m);if(L){res[m]={netto:L.netto,lordo:L.lordo,stato:'simulato',lav:true,doc:null};continue}}
     const p=(D.stipendi||[]).find(x=>x.anno===anno-1&&x.mese===m);
     if(p)res[m]={netto:+p.netto,lordo:p.lordo==null?null:+p.lordo,stato:'simulato',doc:null};
   }
