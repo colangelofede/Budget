@@ -1,7 +1,7 @@
 // ---------- personalizzazione: nome del proprietario (titolo, apertura, iniziali in Home, Excel) ----------
 const APP_NOME='Federico Colangelo';
 const APP_INIZIALI=APP_NOME.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()).slice(0,2).join('')||'B';
-const DEFAULT_URL=''; // indirizzo dell'app web Apps Script: si inserisce dall'app al primo avvio
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbyZpiFFX0eBAodlavRIWcvqvk_JcQlAlrXvtauIL7gAbyvtO29oHMhAeDf-T979WrPX/exec'; // indirizzo dell'app web Apps Script: si inserisce dall'app al primo avvio
 // ---------- dati: Google Sheet tramite Apps Script, con copia locale e coda offline ----------
 const LS={api:'budget-api',cache:'budget-cache',queue:'budget-queue'};
 const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};

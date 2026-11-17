@@ -1134,9 +1134,12 @@ function vCollega(){
 }
 document.addEventListener('submit',async e=>{
   if(e.target.id!=='f-col')return;e.preventDefault();
-  const u=document.getElementById('c-url').value,k=document.getElementById('c-key').value,msg=document.getElementById('c-msg');
-  if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u.trim())){msg.textContent='L\'indirizzo deve iniziare con https://script.google.com/';return}
-  if(!k.trim()){msg.textContent='Scrivi la chiave';return}
+  const pulisci=v=>String(v||'').replace(/[\s\u200B-\u200D\uFEFF]/g,'');
+  const u=pulisci(document.getElementById('c-url').value).replace(/\?.*$/,''),k=pulisci(document.getElementById('c-key').value),msg=document.getElementById('c-msg');
+  if(!u){msg.textContent='Incolla l\'indirizzo dell\'app web (il testo grigio nel campo è solo un esempio)';return}
+  if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)){msg.textContent='L\'indirizzo deve iniziare con https://script.google.com/';return}
+  if(!/\/exec$/.test(u)){msg.textContent='L\'indirizzo deve finire con /exec';return}
+  if(!k){msg.textContent='Incolla la chiave';return}
   msg.textContent='Provo il collegamento…';
   try{await collega(u,k);toast('Collegato al tuo Google Sheet');location.hash='#home'}
   catch(err){msg.textContent=String(err.message).includes('chiave')?'La chiave non corrisponde a quella dello script.':'Non riesco a raggiungere lo script. Controlla l\'indirizzo e che la distribuzione sia "Chiunque".'}
