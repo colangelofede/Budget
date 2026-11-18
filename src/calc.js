@@ -48,7 +48,10 @@ const isEntP=p=>String((p&&p.categoria)||'').startsWith('e-');
 function budgetChiuso(p,m){return !!(p.effettivi&&p.effettivi[String(m)]!=null)}
 // mesi chiusi (passati) con budget non ancora portati a consuntivo
 function budgetDaChiudere(D,oggi){const out={};(D.previsioni||[]).filter(p=>p.tipo==='budget').forEach(p=>{for(let m=1;m<=12;m++){const v=p.importi&&p.importi[m-1];if(v==null||budgetChiuso(p,m)||monthState(p.anno,m,oggi)!=='chiuso')continue;const k=p.anno*100+m;(out[k]=out[k]||{anno:p.anno,m,prev:[]}).prev.push(p)}});return Object.keys(out).sort().map(k=>out[k])}
+// mese da cui si contano saldi e avanzo: il primo con un movimento registrato (prima l'app non conosce le spese); senza movimenti, il mese corrente
+function inizioConteggio(D,oggi){const k=(D.movimenti||[]).map(x=>(+x.anno)*100+(+x.mese)).filter(v=>v>0);oggi=oggi||new Date();return k.length?Math.min(...k):oggi.getFullYear()*100+oggi.getMonth()+1}
 function computeYear(D,anno,oggi){
+  const ini=inizioConteggio(D,oggi);
   const cats=((D.config&&D.config.categorie)||[]).slice().sort((a,b)=>a.ordine-b.ordine);
   const mov=(D.movimenti||[]).filter(x=>x.anno===anno);
   const ist=istanze(D,anno,oggi);
@@ -85,9 +88,9 @@ function computeYear(D,anno,oggi){
     const all=Object.values(cat);
     const tot=r2(all.reduce((a,c)=>a+c.mesi[m-1],0));
     const fisse=r2(all.filter(c=>c.tipo==='fissa').reduce((a,c)=>a+c.mesi[m-1],0));
-    const saldo=r2(disp-tot);cum=r2(cum+saldo);
-    mesi.push({m,spot,ric,disp,spese:tot,fisse,variabili:r2(tot-fisse),saldo,avanzo:cum,stato:monthState(anno,m,oggi),daconf:ist.filter(i=>i.m===m&&i.stato==='daconfermare').length});
+    const saldo=r2(disp-tot);const escluso=anno*100+m<ini;if(!escluso)cum=r2(cum+saldo);
+    mesi.push({m,escluso,spot,ric,disp,spese:tot,fisse,variabili:r2(tot-fisse),saldo,avanzo:cum,stato:monthState(anno,m,oggi),daconf:ist.filter(i=>i.m===m&&i.stato==='daconfermare').length});
   }
-  return {anno,std,riporto,riportoAuto:RI.auto,riportoAvanzo:RI.av,netti:N,totNetti:r2(totNetti),cat:Object.values(cat),mesi,ist};
+  return {anno,ini,std,riporto,riportoAuto:RI.auto,riportoAvanzo:RI.av,netti:N,totNetti:r2(totNetti),cat:Object.values(cat),mesi,ist};
 }
 if(typeof module!=='undefined')module.exports={isEntP,computeYear,istanze,nettiAnno,r2,monthState,dataAddebito};

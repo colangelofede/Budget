@@ -1,4 +1,4 @@
-# Bilancio
+# Finance
 
 App web personale per il budget (flussi di cassa), da aggiungere alla schermata Home dell'iPhone.
 

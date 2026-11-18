@@ -4,7 +4,7 @@ function buildWorkbook(ExcelJS,D,anno,oggi,nome){
   const MBr=['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT','NOV','DIC'];
   const y=computeYear(D,anno,oggi);
   const cats=((D.config&&D.config.categorie)||[]).slice().sort((a,b)=>a.ordine-b.ordine).filter(c=>((!c.dal||anno>=c.dal)&&(!c.al||anno<=c.al))||(D.movimenti||[]).some(x=>x.anno===anno&&x.categoria===c.id)||(D.previsioni||[]).some(p=>p.anno===anno&&p.categoria===c.id));
-  const wb=new ExcelJS.Workbook();wb.creator='Bilancio';wb.created=oggi;
+  const wb=new ExcelJS.Workbook();wb.creator='Finance';wb.created=oggi;
   const EUR='#,##0.00 "€";[Red]-#,##0.00 "€"';
   const INK='FF0D0F14',ACC='FF2F5BFF',SOFT='FFEEF0F4',LINE='FFE4E6EB',SUB='FF5A5F6B';
   const FILL={fissa:'FFFDE8E8',variabile:'FFFFF3E2',investimento:'FFE6F4EC',simulazione:'FFE6F1FB'};
@@ -18,7 +18,7 @@ function buildWorkbook(ExcelJS,D,anno,oggi,nome){
   // ---------- SPESE ----------
   const ws=wb.addWorksheet('Spese',{views:[{state:'frozen',xSplit:1,ySplit:4}],properties:{tabColor:{argb:ACC}}});
   ws.columns=[{width:28},...MBr.map(()=>({width:12})),{width:15},{width:13}];
-  ws.mergeCells('A1:O1');ws.getCell('A1').value=(nome||'Bilancio')+' · '+anno;ws.getCell('A1').font=font({size:16,bold:true});
+  ws.mergeCells('A1:O1');ws.getCell('A1').value=(nome||'Finance')+' · '+anno;ws.getCell('A1').font=font({size:16,bold:true});
   ws.getCell('A2').value=`Esportato il ${oggi.toLocaleDateString('it-IT')} · stipendio standard ${y.std.toLocaleString('it-IT',{minimumFractionDigits:2})} € · in corsivo grigio i mesi futuri (previsione)`;ws.getCell('A2').font=font({size:10,italic:true,color:{argb:SUB}});
   const hdr=r=>{const row=ws.getRow(r);row.values=[r===4?'ENTRATE':'SPESE',...MBr,'TOTALE ANNO','MEDIA'];head(row,r===4?'FF0A7A4E':ACC)};
   hdr(4);

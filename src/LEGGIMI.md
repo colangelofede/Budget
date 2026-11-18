@@ -1,4 +1,4 @@
-# Sorgenti dell'app Bilancio
+# Sorgenti dell'app Finance
 
 `index.html` nella cartella principale è generato da questi file:
 

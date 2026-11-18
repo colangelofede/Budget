@@ -42,7 +42,7 @@ const S={
   mode:(()=>{try{return localStorage.getItem('budget-mode')||'auto'}catch(e){return 'auto'}})(),
   icona:(()=>{const q=(location.search.match(/icona=(scura|chiara)/)||[])[1];if(q){try{localStorage.setItem('budget-icona',q)}catch(e){}return q}try{return localStorage.getItem('budget-icona')||'chiara'}catch(e){return 'chiara'}})()
 };
-function applyIcona(){const d=S.icona==='scura'?'-scura':'';const a=document.querySelector('link[rel=apple-touch-icon]');if(a)a.href='apple-touch-icon-b2'+d+'.png';const m=document.querySelector('link[rel=manifest]');if(m)m.href='manifest'+d+'.webmanifest'}
+function applyIcona(){const d=S.icona==='scura'?'-scura':'';const a=document.querySelector('link[rel=apple-touch-icon]');if(a)a.href='apple-touch-icon-f1'+d+'.png';const m=document.querySelector('link[rel=manifest]');if(m)m.href='manifest'+d+'.webmanifest'}
 function saveIcona(){try{localStorage.setItem('budget-icona',S.icona)}catch(e){}applyIcona()}
 function applyPriv(){document.documentElement.classList.toggle('priv',!!S.priv)}
 function applyMode(){const r=document.documentElement;if(S.mode==='auto')r.removeAttribute('data-mode');else r.setAttribute('data-mode',S.mode);applyTop()}
@@ -57,10 +57,10 @@ function metGruppi(){const out=[];metodi().forEach(m=>{const [g,n]=metParti(m);l
 function metodi(){const m=cfg().metodi;return Array.isArray(m)&&m.length?m:METODI_DEF}
 function lastMet(){try{return localStorage.getItem('budget-metodo')||''}catch(e){return ''}}
 function setLastMet(v){try{localStorage.setItem('budget-metodo',v)}catch(e){}}
-function metPick(sel,name='met'){const G=metGruppi();return `<div class="metrow" role="group" aria-label="Metodo di pagamento" style="--n:${G.length}">${G.map(g=>{
-  if(!g.g)return g.items.map(({m})=>`<button type="button" class="metc" data-${name}="${esc(m)}" aria-pressed="${m===sel}"><span class="metc-t">${esc(m)}</span></button>`).join('');
-  const cur=g.items.find(x=>x.m===sel)||g.items[0];
-  return `<label class="metc" data-metg aria-pressed="${g.items.some(x=>x.m===sel)}"><span class="metc-t">${esc(g.g)}</span><span class="metc-s"><span data-metn>${esc(cur.n)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span><select data-metsel aria-label="${esc(g.g)}: scegli la carta">${g.items.map(({m,n})=>`<option value="${esc(m)}" ${m===cur.m?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`}).join('')}</div>`}
+function metPick(sel,name='met'){const G=metGruppi();const chev='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';return `<div class="metrow" role="group" aria-label="Metodo di pagamento">${G.map(g=>{
+  if(!g.g)return g.items.map(({m})=>`<button type="button" class="metc" data-${name}="${esc(m)}" aria-pressed="${m===sel}">${esc(m)}</button>`).join('');
+  const on=g.items.find(x=>x.m===sel);const cur=on||g.items[0];
+  return `<label class="metc" data-metg data-g="${esc(g.g)}" aria-pressed="${!!on}"><span data-metn>${esc(cur.n)}</span>${chev}<select data-metsel aria-label="${esc(g.g)}: scegli la carta">${g.items.map(({m,n})=>`<option value="${esc(m)}" ${m===cur.m?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`}).join('')}</div>`}
 // collega il selettore metodi: pulsanti singoli e gruppi con menu a tendina
 function metBind(root,set,name='met'){
   const draw=v=>{root.querySelectorAll(`[data-${name}]`).forEach(b=>b.setAttribute('aria-pressed',b.dataset[name]===v));
@@ -230,7 +230,7 @@ function kpiLista(y,m,mi){
   return `<section class="card klist" aria-label="Panoramica del mese">`+
     row('Disponibilità',m.spot||m.ric?'Standard + altre entrate':(S.mese===1&&y.riporto?'Standard + riporto':'Stipendio standard'),eur(m.disp))+
     row('Spese del mese',st==='chiuso'?'Effettive':'Effettive + previste',eur(m.spese),'','#registro')+
-    row('Avanzo cumulato',`Gennaio – ${MESI[mi]}`,sgn(m.avanzo),m.avanzo<0?'neg':'pos','#anno')+
+    row('Avanzo cumulato',m.escluso?'Conta dal primo mese con spese registrate':avanzoDa(y,mi),m.escluso?'—':sgn(m.avanzo),m.escluso?'':m.avanzo<0?'neg':'pos','#anno')+
     row('Fine anno','Previsione '+S.anno,sgn(fine),fine<0?'neg':'pos','#anno')+
     row(st==='chiuso'?'Rispetto alla media':'Previste vs media',med?`Media mesi chiusi ${eur(med)} · ${Math.abs(Math.round(d/med*100))}% ${d>0?'in più':'in meno'}`:'Nessun mese chiuso da confrontare',d==null?'—':sgn(d),d==null?'':d>0?'neg':'pos','#dashboard')+
    `</section>`;
@@ -593,7 +593,7 @@ function vAltro(){
      link('categorie','Categorie e metodi','Categorie di spesa e di entrata, metodi di pagamento'),
      link('dati','Dati e sincronizzazione','Google Sheet, stato della sincronizzazione, esporta in Excel')])+
    `<section class="card"><h2>Tema</h2><div class="seg" role="group" aria-label="Tema"><button data-act="setmode" data-k="auto" aria-pressed="${S.mode==='auto'}">Automatico</button><button data-act="setmode" data-k="light" aria-pressed="${S.mode==='light'}">Chiaro</button><button data-act="setmode" data-k="dark" aria-pressed="${S.mode==='dark'}">Scuro</button></div></section>`+
-   `<section class="card"><h2>Icona dell'app</h2><div class="seg" role="group" aria-label="Icona dell'app"><button data-act="seticona" data-k="chiara" aria-pressed="${S.icona!=='scura'}">Bianca, b nera</button><button data-act="seticona" data-k="scura" aria-pressed="${S.icona==='scura'}">Nera, b bianca</button></div><p class="note">L'iPhone prende l'icona solo quando aggiungi l'app alla Home. Per cambiarla apri in Safari <strong>${esc(location.host+location.pathname)}?icona=${S.icona==='scura'?'scura':'chiara'}</strong>, poi Condividi → Aggiungi alla schermata Home.</p></section>`;
+   `<section class="card"><h2>Icona dell'app</h2><div class="seg" role="group" aria-label="Icona dell'app"><button data-act="seticona" data-k="chiara" aria-pressed="${S.icona!=='scura'}">Bianca, f nera</button><button data-act="seticona" data-k="scura" aria-pressed="${S.icona==='scura'}">Nera, f bianca</button></div><p class="note">L'iPhone prende l'icona solo quando aggiungi l'app alla Home. Per cambiarla apri in Safari <strong>${esc(location.host+location.pathname)}?icona=${S.icona==='scura'?'scura':'chiara'}</strong>, poi Condividi → Aggiungi alla schermata Home.</p></section>`;
 }
 function vProspetto(){
   const y=Y();
@@ -1108,8 +1108,8 @@ function loadExcelJS(){if(window.ExcelJS)return Promise.resolve(window.ExcelJS);
   xlLib=new Promise((res,rej)=>{const tryN=i=>{if(i>=urls.length){xlLib=null;rej(new Error('lib'));return}const sc=document.createElement('script');sc.src=urls[i];sc.onload=()=>window.ExcelJS?res(window.ExcelJS):tryN(i+1);sc.onerror=()=>tryN(i+1);document.head.appendChild(sc)};tryN(0)});return xlLib}
 async function esporta(){
   toast('Preparo il file…');
-  try{const X=await loadExcelJS();const wb=buildWorkbook(X,S.D,S.anno,today(),cfg().nome||'Bilancio');const buf=await wb.xlsx.writeBuffer();
-    const name='Bilancio_'+S.anno+'.xlsx';const type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  try{const X=await loadExcelJS();const wb=buildWorkbook(X,S.D,S.anno,today(),cfg().nome||'Finance');const buf=await wb.xlsx.writeBuffer();
+    const name='Finance_'+S.anno+'.xlsx';const type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     const file=new File([buf],name,{type});
     if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:name})}catch(e){if(e&&e.name==='AbortError')return;throw e}return}
     const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('File pronto: '+name)}
@@ -1177,7 +1177,7 @@ function syncBanner(){
 }
 function vCollega(){
   const a=SYNC.api||{url:DEFAULT_URL,key:''};
-  return `<div class="hd"><div><p class="eyebrow">Bilancio</p><h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px">Collega i tuoi dati</h1></div></div>
+  return `<div class="hd"><div><p class="eyebrow">Finance</p><h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px">Collega i tuoi dati</h1></div></div>
   <section class="card"><p class="note">L'app salva tutto nel tuo Google Sheet. Incolla qui l'indirizzo dell'app web di Apps Script e la chiave che ti ha dato lo script (funzione setup o mostraChiave). Lo fai una volta sola: poi restano su questo telefono.</p>
   <form id="f-col" novalidate style="display:flex;flex-direction:column;gap:14px">
    <div class="field"><label for="c-url">Indirizzo app web (finisce con /exec)</label><input id="c-url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(a.url)}" placeholder="https://script.google.com/macros/s/…/exec"></div>
@@ -1361,3 +1361,5 @@ let _migraMet=false;
 async function migraMetodi(){if(_migraMet||!S.ready||!SYNC.api||!SYNC.last)return;_migraMet=true;const m=(S.D.config&&S.D.config.metodi)||[];
   if(m.join('|')!=='Contanti|Bancomat|Carta di credito')return;const cf=cfgCopy();cf.metodi=METODI_DEF.slice();await saveConfig(cf);
   try{const l=localStorage.getItem('budget-metodo');if(l&&!METODI_DEF.includes(l))localStorage.removeItem('budget-metodo')}catch(e){}}
+
+function avanzoDa(y,mi){const a=Math.floor(y.ini/100),m0=y.ini%100;const da=a<y.anno?'Gennaio':MESI[m0-1];return da===MESI[mi]?MESI[mi]:`${da} – ${MESI[mi]}`}

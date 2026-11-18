@@ -50,7 +50,7 @@ function vStallo(){
   else{const y=computeYear(S.D,t.getFullYear(),t),m=y.mesi[t.getMonth()];const dim=new Date(t.getFullYear(),t.getMonth()+1,0).getDate(),left=dim-t.getDate()+1;
     bud=`<a class="st-card" href="#home" aria-label="Apri il Budget"><span class="st-dir r"><span>Budget</span>${ICON.next}</span>
     <span class="st-row"><span class="st-ic">${LAV_ICON.wallet}</span><span><b>${m.saldo<0?'Sei oltre di '+eur(-m.saldo):'Ti restano '+eur(m.saldo)}</b><small>${MESI[t.getMonth()]} · ${m.saldo>0?eur(m.saldo/left)+' al giorno per '+left+' '+(left===1?'giorno':'giorni'):'spese sopra la disponibilità'}</small></span></span>
-    <span class="st-big"><span class="muted small">Avanzo cumulato</span><span class="num ${m.avanzo<0?'neg':'pos'}">${bigEur(m.avanzo,true)}</span><span class="muted small">Gennaio – ${MESI[t.getMonth()]} ${t.getFullYear()}</span></span></a>`}
+    <span class="st-big"><span class="muted small">Avanzo cumulato</span><span class="num ${m.avanzo<0?'neg':'pos'}">${bigEur(m.avanzo,true)}</span><span class="muted small">${avanzoDa(y,t.getMonth())} ${t.getFullYear()}</span></span></a>`}
   return `<div class="st-top"><p class="eyebrow">${GG[t.getDay()]} ${t.getDate()} ${MESI[t.getMonth()]}</p><h1 class="st-h">Ciao ${esc(APP_NOME.split(' ')[0])}</h1></div>${syncBanner()}${lav}${bud}
    <div class="st-hint" aria-hidden="true"><span>${ICON.prev} scorri a destra</span><span class="dots"><i></i><i class="on"></i><i></i></span><span>scorri a sinistra ${ICON.next}</span></div>`;
 }

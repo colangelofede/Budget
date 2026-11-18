@@ -321,10 +321,10 @@ h1,h2,.monthnav h1{letter-spacing:-.6px}
 @media (prefers-reduced-motion: reduce){.tabs .in::before,.tabs a,.tabs a::before,.tabs a svg,.tabs a span,.tabs .fab{transition:none}}
 .pg{padding-bottom:calc(env(safe-area-inset-bottom) + 104px)}
 
-/* schermata di apertura: «bilancio.» su nero */
+/* schermata di apertura: «finance.» su nero */
 .splash{position:fixed;inset:0;z-index:100;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;gap:30px;padding:0 28px calc(env(safe-area-inset-bottom) + 64px);transition:opacity .45s ease,transform .45s ease;overflow:hidden}
 .splash.out{opacity:0;transform:scale(1.03);pointer-events:none}
-.splash .word{font-family:"Space Grotesk",var(--font);font-size:clamp(50px,15vw,76px);font-weight:700;letter-spacing:-.05em;line-height:.95;display:flex}
+.splash .word{font-family:"Space Grotesk",var(--font);font-size:clamp(54px,17vw,84px);font-weight:700;letter-spacing:-.05em;line-height:.95;display:flex}
 .splash .word span{display:inline-block;opacity:0;transform:translateY(26px);animation:rise .55s cubic-bezier(.2,.7,.2,1) forwards}
 .splash .tag{margin:10px 0 0;font-size:15px;color:#A3A3A3;opacity:0;animation:fade .6s 1s forwards}
 .splash .bottom{display:flex;flex-direction:column;gap:10px}
@@ -497,13 +497,13 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 .metg-l{font-size:12px;font-weight:700;color:var(--sub)}
 .actions.tre .pill-btn{padding:0 8px;font-size:15px;white-space:nowrap}
 
-/* metodi su una riga: Contanti · Bancomat ▾ · Carta di credito ▾ */
-.metrow{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px}
-.metc{position:relative;min-height:56px;border-radius:16px;border:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 6px;text-align:center;font:inherit;color:inherit;cursor:pointer}
-.metc-t{font-size:14px;font-weight:700;line-height:1.15}
-.metc-s{display:inline-flex;align-items:center;gap:3px;font-size:12.5px;font-weight:600;color:var(--sub)}
+/* metodi su una riga: pillole come prima; i gruppi aprono la tendina della carta */
+.metrow{display:flex;flex-wrap:wrap;gap:8px}
+.metc{position:relative;height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:14px;font-weight:600;color:inherit;cursor:pointer;white-space:nowrap}
 .metc[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.metc[aria-pressed="true"] .metc-s{color:inherit;opacity:.85}
+.metc svg{flex:none;opacity:.8}
 .metc select{position:absolute;inset:0;width:100%;height:100%;opacity:0;-webkit-appearance:none;appearance:none;border:0;font-size:16px;cursor:pointer}
 .cat-new{display:flex;flex-direction:column;gap:10px;background:var(--soft);border-radius:var(--r-md);padding:12px}
 .cat-new[hidden]{display:none}
+.field label.metc{font-size:14px;font-weight:600;color:var(--ink)}
+.field label.metc[aria-pressed="true"]{color:var(--on-accent)}

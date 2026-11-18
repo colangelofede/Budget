@@ -11,15 +11,15 @@ html=f'''<!DOCTYPE html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Bilancio">
+<meta name="apple-mobile-web-app-title" content="Finance">
 <meta name="theme-color" content="#E4E4E7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#2C2C30" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex, nofollow">
-<title>Bilancio · {NOME}</title>
+<title>Finance · {NOME}</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon-b2.png">
-<script>try{{var q=(location.search.match(/icona=(scura|chiara)/)||[])[1]||localStorage.getItem('budget-icona');if(q==='scura'){{document.querySelector('link[rel=apple-touch-icon]').href='apple-touch-icon-b2-scura.png';document.querySelector('link[rel=manifest]').href='manifest-scura.webmanifest'}}}}catch(e){{}}</script>
-<link rel="icon" href="icon-192-b2.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-f1.png">
+<script>try{{var q=(location.search.match(/icona=(scura|chiara)/)||[])[1]||localStorage.getItem('budget-icona');if(q==='scura'){{document.querySelector('link[rel=apple-touch-icon]').href='apple-touch-icon-f1-scura.png';document.querySelector('link[rel=manifest]').href='manifest-scura.webmanifest'}}}}catch(e){{}}</script>
+<link rel="icon" href="icon-192-f1.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@ html=f'''<!DOCTYPE html>
 </style>
 </head>
 <body>
-<div class="splash" id="splash" role="status" aria-live="polite" aria-label="Caricamento"><div><div class="word" aria-hidden="true"><span style="animation-delay:0.15s">b</span><span style="animation-delay:0.21s">i</span><span style="animation-delay:0.27s">l</span><span style="animation-delay:0.33s">a</span><span style="animation-delay:0.39s">n</span><span style="animation-delay:0.45s">c</span><span style="animation-delay:0.51s">i</span><span style="animation-delay:0.57s">o</span><span style="animation-delay:0.63s">.</span></div><p class="tag">Lavoro e finanze · {NOME.split()[0]}</p></div><div class="bottom"><div class="row"><p id="splash-msg">Avvio…</p><span id="splash-pct" aria-hidden="true">0%</span></div><div class="track" aria-hidden="true"><div class="fill" id="splash-fill"></div></div></div></div>
+<div class="splash" id="splash" role="status" aria-live="polite" aria-label="Caricamento"><div><div class="word" aria-hidden="true"><span style="animation-delay:0.15s">f</span><span style="animation-delay:0.21s">i</span><span style="animation-delay:0.27s">n</span><span style="animation-delay:0.33s">a</span><span style="animation-delay:0.39s">n</span><span style="animation-delay:0.45s">c</span><span style="animation-delay:0.51s">e</span><span style="animation-delay:0.57s">.</span></div><p class="tag">Lavoro e finanze · {NOME.split()[0]}</p></div><div class="bottom"><div class="row"><p id="splash-msg">Avvio…</p><span id="splash-pct" aria-hidden="true">0%</span></div><div class="track" aria-hidden="true"><div class="fill" id="splash-fill"></div></div></div></div>
 <div id="scr"><main id="view" class="pg" aria-live="polite"></main></div>
 <nav class="tabs" aria-label="Sezioni"><div class="in">
 <a href="#home" data-v="home">{ic('home')}<span>Home</span></a>
