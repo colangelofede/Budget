@@ -496,3 +496,14 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 .metg{display:flex;flex-direction:column;gap:6px}
 .metg-l{font-size:12px;font-weight:700;color:var(--sub)}
 .actions.tre .pill-btn{padding:0 8px;font-size:15px;white-space:nowrap}
+
+/* metodi su una riga: Contanti · Bancomat ▾ · Carta di credito ▾ */
+.metrow{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px}
+.metc{position:relative;min-height:56px;border-radius:16px;border:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 6px;text-align:center;font:inherit;color:inherit;cursor:pointer}
+.metc-t{font-size:14px;font-weight:700;line-height:1.15}
+.metc-s{display:inline-flex;align-items:center;gap:3px;font-size:12.5px;font-weight:600;color:var(--sub)}
+.metc[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.metc[aria-pressed="true"] .metc-s{color:inherit;opacity:.85}
+.metc select{position:absolute;inset:0;width:100%;height:100%;opacity:0;-webkit-appearance:none;appearance:none;border:0;font-size:16px;cursor:pointer}
+.cat-new{display:flex;flex-direction:column;gap:10px;background:var(--soft);border-radius:var(--r-md);padding:12px}
+.cat-new[hidden]{display:none}

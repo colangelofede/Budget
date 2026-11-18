@@ -57,7 +57,33 @@ function metGruppi(){const out=[];metodi().forEach(m=>{const [g,n]=metParti(m);l
 function metodi(){const m=cfg().metodi;return Array.isArray(m)&&m.length?m:METODI_DEF}
 function lastMet(){try{return localStorage.getItem('budget-metodo')||''}catch(e){return ''}}
 function setLastMet(v){try{localStorage.setItem('budget-metodo',v)}catch(e){}}
-function metPick(sel,name='met'){return `<div class="metpick" role="group" aria-label="Metodo di pagamento">${metGruppi().map(G=>`<div class="metg">${G.g?`<span class="metg-l">${esc(G.g)}</span>`:''}<div class="catpick">${G.items.map(({m,n})=>`<button type="button" data-${name}="${esc(m)}" aria-pressed="${m===sel}">${esc(n)}</button>`).join('')}</div></div>`).join('')}</div>`}
+function metPick(sel,name='met'){const G=metGruppi();return `<div class="metrow" role="group" aria-label="Metodo di pagamento" style="--n:${G.length}">${G.map(g=>{
+  if(!g.g)return g.items.map(({m})=>`<button type="button" class="metc" data-${name}="${esc(m)}" aria-pressed="${m===sel}"><span class="metc-t">${esc(m)}</span></button>`).join('');
+  const cur=g.items.find(x=>x.m===sel)||g.items[0];
+  return `<label class="metc" data-metg aria-pressed="${g.items.some(x=>x.m===sel)}"><span class="metc-t">${esc(g.g)}</span><span class="metc-s"><span data-metn>${esc(cur.n)}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span><select data-metsel aria-label="${esc(g.g)}: scegli la carta">${g.items.map(({m,n})=>`<option value="${esc(m)}" ${m===cur.m?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`}).join('')}</div>`}
+// collega il selettore metodi: pulsanti singoli e gruppi con menu a tendina
+function metBind(root,set,name='met'){
+  const draw=v=>{root.querySelectorAll(`[data-${name}]`).forEach(b=>b.setAttribute('aria-pressed',b.dataset[name]===v));
+    root.querySelectorAll('[data-metg]').forEach(l=>{const s=l.querySelector('select');const on=[...s.options].some(o=>o.value===v);if(on)s.value=v;l.setAttribute('aria-pressed',on);l.querySelector('[data-metn]').textContent=s.options[s.selectedIndex].textContent})};
+  root.querySelectorAll(`[data-${name}]`).forEach(b=>b.onclick=()=>{set(b.dataset[name]);draw(b.dataset[name])});
+  root.querySelectorAll('[data-metsel]').forEach(s=>{const go=()=>{set(s.value);draw(s.value)};s.addEventListener('change',go);s.addEventListener('blur',go)});
+  return draw}
+// "+ Nuova categoria…" direttamente nel menu a tendina (uscite ed entrate)
+const NUOVA='__nuova';
+function catInline(sel,kind,onDone){
+  const box=document.createElement('div');box.className='cat-new';box.hidden=true;
+  box.innerHTML=`<div class="field"><label>Nuova categoria ${kind==='e'?'di entrata':'di spesa'}</label><input class="cn-n" placeholder="${kind==='e'?'Es. Assegno unico':'Es. Palestra'}" autocomplete="off"></div>${kind==='e'?'':`<div class="seg" role="group" aria-label="Tipo"><button type="button" data-cnt="variabile" aria-pressed="true">Variabile</button><button type="button" data-cnt="fissa" aria-pressed="false">Fissa</button></div>`}<div class="actions"><button type="button" class="pill-btn soft cn-x">Annulla</button><button type="button" class="pill-btn cn-ok">Aggiungi</button></div>`;
+  sel.closest('.field').after(box);let prev=sel.value===NUOVA?'':sel.value,tipo='variabile';
+  box.querySelectorAll('[data-cnt]').forEach(b=>b.onclick=()=>{tipo=b.dataset.cnt;box.querySelectorAll('[data-cnt]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+  sel.addEventListener('change',()=>{if(sel.value===NUOVA){box.hidden=false;setTimeout(()=>box.querySelector('.cn-n').focus(),50)}else{prev=sel.value;box.hidden=true}});
+  box.querySelector('.cn-x').onclick=()=>{sel.value=prev;box.hidden=true;sel.dispatchEvent(new Event('change'))};
+  box.querySelector('.cn-ok').onclick=async()=>{const nome=box.querySelector('.cn-n').value.trim();if(!nome){toast('Scrivi un nome');return}
+    const cf=cfgCopy();const lista=kind==='e'?cf.entrate:cf.categorie;if(lista.some(z=>z.nome.toLowerCase()===nome.toLowerCase())){toast('Esiste già');return}
+    const base=nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'categoria';let nid=(kind==='e'?'e-':'')+base;while(cf.categorie.some(z=>z.id===nid)||cf.entrate.some(z=>z.id===nid))nid+='-2';
+    if(kind==='e')cf.entrate.push({id:nid,nome,ordine:Math.max(-1,...cf.entrate.map(z=>z.ordine))+1});
+    else cf.categorie.push({id:nid,nome,tipo,noprev:false,ordine:Math.max(-1,...cf.categorie.map(z=>z.ordine))+1,dal:S.anno,al:null});
+    await saveConfig(cf);const o=document.createElement('option');o.value=nid;o.textContent=nome;sel.insertBefore(o,sel.querySelector(`option[value="${NUOVA}"]`));sel.value=nid;prev=nid;box.hidden=true;box.querySelector('.cn-n').value='';sel.dispatchEvent(new Event('change'));if(onDone)onDone(nid);toast('Categoria creata: '+nome)};
+}
 function metPickOld(sel,name='met'){return `<div class="catpick" role="group" aria-label="Metodo di pagamento">${metodi().map(m=>`<button type="button" data-${name}="${esc(m)}" aria-pressed="${m===sel}">${esc(m)}</button>`).join('')}</div>`}
 function metOptions(sel){return '<option value="">—</option>'+metGruppi().map(G=>{const o=G.items.map(({m,n})=>`<option value="${esc(m)}" ${m===sel?'selected':''}>${esc(G.g?n:m)}</option>`).join('');return G.g?`<optgroup label="${esc(G.g)}">${o}</optgroup>`:o}).join('')+(sel&&!metodi().includes(sel)?`<option value="${esc(sel)}" selected>${esc(sel)}</option>`:'')}
 function anyName(id){return entName(id)||catName(id)}
@@ -694,8 +720,8 @@ function sheetAdd(kind='uscita',pre=null){
    <div class="field k-stip"><label for="a-sm">Mensilità</label><select id="a-sm">${stipOptions(curM())}</select></div>
    <div class="field"><label for="a-imp" id="a-implbl">Importo (€)</label><input id="a-imp" class="big num" inputmode="decimal" autocomplete="off" placeholder="0,00" data-autofocus></div>
    <div class="field k-stip"><label for="a-lordo">Lordo (€)</label><input id="a-lordo" class="num" inputmode="decimal" placeholder="facoltativo"></div>
-   <div class="field k-cat"><label for="a-cat">Categoria</label><select id="a-cat"><option value="" selected disabled>Scegli una categoria</option>${catOptions('')}</select></div>
-   <div class="field k-ecat"><label for="a-ecat">Categoria entrata</label><select id="a-ecat">${ecatOptions('')}</select><p class="note">Le crei in Altro → Categorie e metodi → Entrate.</p></div>
+   <div class="field k-cat"><label for="a-cat">Categoria</label><select id="a-cat"><option value="" selected disabled>Scegli una categoria</option>${catOptions('')}<option value="__nuova">+ Nuova categoria…</option></select></div>
+   <div class="field k-ecat"><label for="a-ecat">Categoria entrata</label><select id="a-ecat">${ecatOptions('')}<option value="__nuova">+ Nuova categoria…</option></select></div>
    <div class="field k-met"><label id="a-metlbl">Metodo di pagamento</label>${metPick(lastMet()||metodi()[0])}</div>
    <div class="field k-prev"><label>Tipo</label><div class="seg" role="group" aria-label="Tipo di previsione"><button type="button" data-ptipo="certo">Importo certo</button><button type="button" data-ptipo="variabile">Variabile</button><button type="button" data-ptipo="budget">Budget</button></div><p class="note" id="a-ptnote"></p></div>
    <div class="two k-prev"><div class="field"><label for="a-pda">Dal mese (${S.anno})</label><select id="a-pda">${meseOptions(curM())}</select></div><div class="field"><label for="a-pf">Frequenza</label><select id="a-pf"><option value="1">Ogni mese</option><option value="2">Ogni 2 mesi</option><option value="3">Ogni 3 mesi</option><option value="6">Ogni 6 mesi</option><option value="y">Ogni anno</option><option value="12">Una volta</option></select></div></div>
@@ -737,9 +763,9 @@ function sheetAdd(kind='uscita',pre=null){
     el.querySelectorAll('[data-verso]').forEach(b=>b.onclick=()=>{verso=b.dataset.verso;sync()});
     el.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{sub=b.dataset.sub;sync()});
     el.querySelectorAll('[data-pdir]').forEach(b=>b.onclick=()=>{pdir=b.dataset.pdir;sync()});
-    let met=pre&&pre.met||(metodi().includes(lastMet())?lastMet():metodi()[0]);el.querySelectorAll('[data-met]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.met===met));
+    let met=pre&&pre.met||(metodi().includes(lastMet())?lastMet():metodi()[0]);const metDraw=metBind(el,v=>{met=v});metDraw(met);
+    catInline($('#a-cat'),'u');catInline($('#a-ecat'),'e');
     const fine=async()=>{if(pre&&pre.dvId)await del('davalidare/'+pre.dvId)};
-    el.querySelectorAll('[data-met]').forEach(b=>b.onclick=()=>{met=b.dataset.met;el.querySelectorAll('[data-met]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     const sel=$('#a-cat');
     el.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{sel.value=b.dataset.cat;el.querySelectorAll('[data-cat]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     sel.onchange=()=>el.querySelectorAll('[data-cat]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.cat===sel.value));
@@ -751,8 +777,8 @@ function sheetAdd(kind='uscita',pre=null){
     $('#f-add').onsubmit=async e=>{e.preventDefault();if(!(verso==='entrata'&&sub==='stipendio'))setLastMet(met);
       const v=num(imp.value);if(!(v>0)){imp.focus();toast('Scrivi un importo maggiore di zero');return}
       const pe=verso==='prevista'&&pdir==='entrata';
-      if((verso==='uscita'||verso==='prevista'&&!pe||verso==='entrata'&&sub==='reso')&&!$('#a-cat').value){$('#a-cat').focus();toast('Scegli una categoria');return}
-      if((pe||verso==='entrata'&&sub==='ricorrente')&&!$('#a-ecat').value){$('#a-ecat').focus();toast(catEnt().length?'Scegli una categoria di entrata':'Crea prima una categoria di entrata in Altro › Categorie e metodi');return}
+      if((verso==='uscita'||verso==='prevista'&&!pe||verso==='entrata'&&sub==='reso')&&(!$('#a-cat').value||$('#a-cat').value===NUOVA)){$('#a-cat').focus();toast('Scegli una categoria');return}
+      if((pe||verso==='entrata'&&sub==='ricorrente')&&(!$('#a-ecat').value||$('#a-ecat').value===NUOVA)){$('#a-ecat').focus();toast(catEnt().length?'Scegli una categoria di entrata':'Crea prima una categoria di entrata in Altro › Categorie e metodi');return}
       const desc=$('#a-desc').value.trim();
       if(verso==='prevista'){const ms_=prevMesi();if(!ms_.length){toast('"Fino a" deve venire dopo "Dal mese"');return}
         const g=parseInt($('#a-pg').value,10);const cat=pe?$('#a-ecat').value:$('#a-cat').value;
@@ -760,7 +786,7 @@ function sheetAdd(kind='uscita',pre=null){
         const u=ms_[ms_.length-1];close();toast(`${pe?'Entrata prevista':'Prevista'}: ${desc||anyName(cat)} ${eur(v)} · ${ms_.length} ${ms_.length===1?'mese':'mesi'}${anni.length>1?` fino a ${MESI[u.m-1]} ${u.anno}`:''}`);return}const {anno:annoAdd,mese}=leggiAddebito(ms.value);const data=d.value||null;
       if(verso==='entrata'&&sub==='stipendio'){const m=+$('#a-sm').value,l=num($('#a-lordo').value);
         await put('stipendi/'+S.anno+'-'+pad(m),{anno:S.anno,mese:m,netto:r2(v),lordo:isNaN(l)?null:r2(l),stato:'confermato'});close();toast(`Inserito: stipendio ${nomeStip(m)} ${eur(v)} netto (confermato)`);return}
-      if(verso==='entrata'&&sub==='spot'){await put('movimenti/'+newId('movimenti'),{anno:annoAdd,mese,data,tipo:'spot',categoria:$('#a-ecat').value||null,descrizione:desc||entName($('#a-ecat').value)||'Entrata',importo:r2(v),metodo:met});close();toast(`Inserito: +${eur(v)} entrata spot${$('#a-ecat').value?' '+entName($('#a-ecat').value):''} · ${nomeAddebito(annoAdd,mese)}`);return}
+      if(verso==='entrata'&&sub==='spot'){await put('movimenti/'+newId('movimenti'),{anno:annoAdd,mese,data,tipo:'spot',categoria:($('#a-ecat').value!==NUOVA&&$('#a-ecat').value)||null,descrizione:desc||entName($('#a-ecat').value)||'Entrata',importo:r2(v),metodo:met});close();toast(`Inserito: +${eur(v)} entrata spot${$('#a-ecat').value?' '+entName($('#a-ecat').value):''} · ${nomeAddebito(annoAdd,mese)}`);return}
       if(verso==='entrata'&&sub==='ricorrente'){const ec=$('#a-ecat').value;
         const pr=S.D.previsioni.find(p=>p.anno===annoAdd&&p.categoria===ec&&p.importi&&p.importi[mese-1]!=null&&!(p.effettivi&&p.effettivi[String(mese)]!=null));
         if(pr){close();const ch=await choiceBox('C\'è già una previsione',`A ${MESI[mese-1]} è prevista l'entrata "<strong>${esc(pr.descrizione)}</strong>" da ${eur(+pr.importi[mese-1])}. Questa entrata da ${eur(v)} è la stessa?`,[['same','Sì, è la stessa: confermala con '+eur(v)],['new','No, è un\'altra entrata'],['0','Annulla']]);
