@@ -28,7 +28,7 @@ function buildWorkbook(ExcelJS,D,anno,oggi,nome){
     if(opt.fill)row.eachCell({includeEmpty:true},c=>{if(c.col<=15)c.fill=fill(opt.fill)});
     row.eachCell({includeEmpty:true},c=>{if(c.col<=15)c.border={bottom:thin}});return row};
   put(5,'Stipendio standard',y.mesi.map(()=>y.std));
-  put(6,'Entrate spot',y.mesi.map(m=>m.spot));
+  put(6,'Entrate spot',y.mesi.map(m=>r2((m.spot||0)+(m.ric||0))));
   put(7,'Riporto anno precedente',y.mesi.map((m,i)=>i===0?y.riporto:0),{media:false});
   const te=put(8,'TOTALE ENTRATE',[...Array(12)].map(()=>0),{fill:SOFT,media:false});
   for(let i=0;i<12;i++){const L=col(i+2);te.getCell(i+2).value={formula:`SUM(${L}5:${L}7)`};te.getCell(i+2).font=font({bold:true})}
@@ -52,7 +52,7 @@ function buildWorkbook(ExcelJS,D,anno,oggi,nome){
   const catNome=id=>{const c=cats.find(x=>x.id===id);return c?c.nome:(id||'')};
   const rows=[];
   (D.movimenti||[]).filter(x=>x.anno===anno).forEach(x=>{
-    const tipo=x.tipo==='spesa'?'Spesa':x.tipo==='reso'?'Storno / reso':'Entrata spot';
+    const tipo=x.tipo==='spesa'?'Spesa':x.tipo==='reso'?'Storno / reso':x.tipo==='entrata'?'Entrata':'Entrata spot';
     rows.push({data:x.data?new Date(x.data+'T12:00:00'):null,m:x.mese,mov:x.tipo==='spesa'?'Uscita':'Entrata',tipo,cat:catNome(x.categoria),desc:x.descrizione||'',met:x.metodo||'',u:x.tipo==='spesa'?+x.importo:null,e:x.tipo==='spesa'?null:+x.importo,stato:'Effettivo',quota:x.quota?x.quota+' di '+(+x.totale||0).toLocaleString('it-IT',{minimumFractionDigits:2})+' €':''});
   });
   y.ist.forEach(i=>rows.push({data:dataAddebito(anno,i.m,i.p.giorno||28),m:i.m,mov:'Uscita',tipo:'Prevista ('+(i.p.tipo==='certo'?'certa':'variabile')+')',cat:catNome(i.p.categoria),desc:i.p.descrizione,met:i.p.metodo||'',u:i.importo,e:null,stato:i.stato==='effettivo'?(i.auto?'Pagata (automatica)':'Pagata'):i.stato==='daconfermare'?'Da confermare':'Prevista',quota:''}));

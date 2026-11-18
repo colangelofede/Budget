@@ -490,3 +490,9 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 .passi li{display:flex;gap:12px;align-items:flex-start}
 .passi li > span{display:flex;flex-direction:column;gap:2px}
 .passi .n{width:28px;height:28px;border-radius:14px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+
+/* metodi raggruppati (Bancomat · BPER…) */
+.metpick{display:flex;flex-direction:column;gap:10px}
+.metg{display:flex;flex-direction:column;gap:6px}
+.metg-l{font-size:12px;font-weight:700;color:var(--sub)}
+.actions.tre .pill-btn{padding:0 8px;font-size:15px;white-space:nowrap}

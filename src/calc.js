@@ -43,6 +43,8 @@ function riportoInfo(D,anno,oggi){
   if((D.movimenti||[]).some(x=>x.anno===anno-1)||(D.previsioni||[]).some(x=>x.anno===anno-1)){const av=computeYear(D,anno-1,oggi).mesi[11].avanzo;return {v:av>0?av:0,auto:true,av}}
   return {v:+(((D.config&&D.config.riporti)||{})[String(anno)]||0),auto:false,av:null};
 }
+// previsioni di entrata: categoria di entrata (id con prefisso "e-")
+const isEntP=p=>String((p&&p.categoria)||'').startsWith('e-');
 function budgetChiuso(p,m){return !!(p.effettivi&&p.effettivi[String(m)]!=null)}
 // mesi chiusi (passati) con budget non ancora portati a consuntivo
 function budgetDaChiudere(D,oggi){const out={};(D.previsioni||[]).filter(p=>p.tipo==='budget').forEach(p=>{for(let m=1;m<=12;m++){const v=p.importi&&p.importi[m-1];if(v==null||budgetChiuso(p,m)||monthState(p.anno,m,oggi)!=='chiuso')continue;const k=p.anno*100+m;(out[k]=out[k]||{anno:p.anno,m,prev:[]}).prev.push(p)}});return Object.keys(out).sort().map(k=>out[k])}
@@ -65,7 +67,7 @@ function computeYear(D,anno,oggi){
       if(x.tipo==='spesa')real[x.categoria]=(real[x.categoria]||0)+(+x.importo);
       else if(x.tipo==='reso')real[x.categoria]=(real[x.categoria]||0)-(+x.importo);
     });
-    ist.filter(i=>i.m===m).forEach(i=>{fixed[i.p.categoria]=(fixed[i.p.categoria]||0)+i.importo});
+    ist.filter(i=>i.m===m&&!isEntP(i.p)).forEach(i=>{fixed[i.p.categoria]=(fixed[i.p.categoria]||0)+i.importo});
     // budget: conta max(budget, reale) finché il mese non è chiuso a consuntivo (Eff del mese valorizzato); poi solo reale
     bud.forEach(p=>{const v=p.importi&&p.importi[m-1];if(v!=null&&!budgetChiuso(p,m))b[p.categoria]=(b[p.categoria]||0)+(+v)});
     new Set([...Object.keys(real),...Object.keys(fixed),...Object.keys(b)]).forEach(id=>{
@@ -77,13 +79,15 @@ function computeYear(D,anno,oggi){
   const mesi=[];let cum=0;
   for(let m=1;m<=12;m++){
     const spot=r2(mov.filter(x=>x.mese===m&&x.tipo==='spot').reduce((a,x)=>a+(+x.importo),0));
-    const disp=r2(std+spot+(m===1?riporto:0));
+    // entrate ricorrenti: movimenti di tipo "entrata" + previsioni di entrata del mese
+    const ric=r2(mov.filter(x=>x.mese===m&&x.tipo==='entrata').reduce((a,x)=>a+(+x.importo),0)+ist.filter(i=>i.m===m&&isEntP(i.p)).reduce((a,i)=>a+i.importo,0));
+    const disp=r2(std+spot+ric+(m===1?riporto:0));
     const all=Object.values(cat);
     const tot=r2(all.reduce((a,c)=>a+c.mesi[m-1],0));
     const fisse=r2(all.filter(c=>c.tipo==='fissa').reduce((a,c)=>a+c.mesi[m-1],0));
     const saldo=r2(disp-tot);cum=r2(cum+saldo);
-    mesi.push({m,spot,disp,spese:tot,fisse,variabili:r2(tot-fisse),saldo,avanzo:cum,stato:monthState(anno,m,oggi),daconf:ist.filter(i=>i.m===m&&i.stato==='daconfermare').length});
+    mesi.push({m,spot,ric,disp,spese:tot,fisse,variabili:r2(tot-fisse),saldo,avanzo:cum,stato:monthState(anno,m,oggi),daconf:ist.filter(i=>i.m===m&&i.stato==='daconfermare').length});
   }
   return {anno,std,riporto,riportoAuto:RI.auto,riportoAvanzo:RI.av,netti:N,totNetti:r2(totNetti),cat:Object.values(cat),mesi,ist};
 }
-if(typeof module!=='undefined')module.exports={computeYear,istanze,nettiAnno,r2,monthState,dataAddebito};
+if(typeof module!=='undefined')module.exports={isEntP,computeYear,istanze,nettiAnno,r2,monthState,dataAddebito};

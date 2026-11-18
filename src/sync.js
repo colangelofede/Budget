@@ -30,7 +30,9 @@ function rawToD(raw){
   const lavoro=(raw.lavoro||[]).filter(x=>x.id).map(x=>Object.assign({},x,{id:st(x.id),dal:st(x.dal).slice(0,7)}));
   const voci=(raw.voci||[]).filter(x=>x.id).map(x=>({id:st(x.id),anno:nz(x.anno),mese:nz(x.mese),descrizione:st(x.descrizione),importo:nz(x.importo)||0,noinps:x.noinps}));
   const saldi=(raw.saldi||[]).filter(x=>x.id).map(x=>({id:st(x.id),anno:nz(x.anno),mese:nz(x.mese),ferie:nz(x.ferie),rol:nz(x.rol),s30b:nz(x.s30b),s40b:nz(x.s40b),s50b:nz(x.s50b),s70b:nz(x.s70b)}));
-  return {config:{nome:APP_NOME,categorie,entrate,metodi,riporti},movimenti,previsioni,stipendi,ore,timbrature,lavoro,voci,saldi};
+  // pagamenti Apple Pay arrivati da Comandi rapidi, da validare
+  const davalidare=(raw.davalidare||[]).filter(x=>x.id).map(x=>({id:st(x.id),data:dIso(x.data),ora:hm(x.ora),valore:st(x.valore),esercente:st(x.esercente),carta:st(x.carta)}));
+  return {config:{nome:APP_NOME,categorie,entrate,metodi,riporti},movimenti,previsioni,stipendi,ore,timbrature,lavoro,voci,saldi,davalidare};
 }
 function prevToRow(d){const r={anno:d.anno,categoria:d.categoria,descrizione:d.descrizione,tipo:d.tipo,giorno:d.giorno??null,metodo:d.metodo??null,scadenza:!!d.scadenza,serie:d.serie??null,freq:d.freq??null,rate:!!d.rate,origine:d.origine??null};
   MB_.forEach((m,i)=>{r[m]=d.importi?d.importi[i]:null;const e=d.effettivi&&d.effettivi[String(i+1)];r['Eff '+m]=e==null?null:e});return r}
@@ -42,7 +44,7 @@ function configOps(c){return [
 
 // applica le operazioni alla copia locale (subito, anche offline)
 function applyLocal(raw,ops){
-  raw=JSON.parse(JSON.stringify(raw||{movimenti:[],previsioni:[],stipendi:[],categorie:[],metodi:[],riporti:[],ore:[],timbrature:[],lavoro:[],voci:[],saldi:[]}));
+  raw=JSON.parse(JSON.stringify(raw||{movimenti:[],previsioni:[],stipendi:[],categorie:[],metodi:[],riporti:[],ore:[],timbrature:[],lavoro:[],voci:[],saldi:[],davalidare:[]}));
   ops.forEach(o=>{raw[o.col]=raw[o.col]||[];
     if(o.op==='replace'){raw[o.col]=o.rows.slice();return}
     const i=raw[o.col].findIndex(r=>String(r.id)===String(o.id));
