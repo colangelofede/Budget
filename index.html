@@ -6,11 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Budget">
+<meta name="apple-mobile-web-app-title" content="Bilancio">
 <meta name="theme-color" content="#E4E4E7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#2C2C30" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex, nofollow">
-<title>Budget · Federico Colangelo</title>
+<title>Bilancio · Federico Colangelo</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon-b2.png">
 <script>try{var q=(location.search.match(/icona=(scura|chiara)/)||[])[1]||localStorage.getItem('budget-icona');if(q==='scura'){document.querySelector('link[rel=apple-touch-icon]').href='apple-touch-icon-b2-scura.png';document.querySelector('link[rel=manifest]').href='manifest-scura.webmanifest'}}catch(e){}</script>
@@ -342,10 +342,10 @@ h1,h2,.monthnav h1{letter-spacing:-.6px}
 @media (prefers-reduced-motion: reduce){.tabs .in::before,.tabs a,.tabs a::before,.tabs a svg,.tabs a span,.tabs .fab{transition:none}}
 .pg{padding-bottom:calc(env(safe-area-inset-bottom) + 104px)}
 
-/* schermata di apertura: «budget.» su nero */
+/* schermata di apertura: «bilancio.» su nero */
 .splash{position:fixed;inset:0;z-index:100;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;gap:30px;padding:0 28px calc(env(safe-area-inset-bottom) + 64px);transition:opacity .45s ease,transform .45s ease;overflow:hidden}
 .splash.out{opacity:0;transform:scale(1.03);pointer-events:none}
-.splash .word{font-family:"Space Grotesk",var(--font);font-size:clamp(64px,21vw,92px);font-weight:700;letter-spacing:-.05em;line-height:.95;display:flex}
+.splash .word{font-family:"Space Grotesk",var(--font);font-size:clamp(50px,15vw,76px);font-weight:700;letter-spacing:-.05em;line-height:.95;display:flex}
 .splash .word span{display:inline-block;opacity:0;transform:translateY(26px);animation:rise .55s cubic-bezier(.2,.7,.2,1) forwards}
 .splash .tag{margin:10px 0 0;font-size:15px;color:#A3A3A3;opacity:0;animation:fade .6s 1s forwards}
 .splash .bottom{display:flex;flex-direction:column;gap:10px}
@@ -515,7 +515,7 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 </style>
 </head>
 <body>
-<div class="splash" id="splash" role="status" aria-live="polite" aria-label="Caricamento"><div><div class="word" aria-hidden="true"><span style="animation-delay:0.15s">b</span><span style="animation-delay:0.21s">u</span><span style="animation-delay:0.27s">d</span><span style="animation-delay:0.33s">g</span><span style="animation-delay:0.39s">e</span><span style="animation-delay:0.45s">t</span><span style="animation-delay:0.51s">.</span></div><p class="tag">Flussi di cassa · Federico</p></div><div class="bottom"><div class="row"><p id="splash-msg">Avvio…</p><span id="splash-pct" aria-hidden="true">0%</span></div><div class="track" aria-hidden="true"><div class="fill" id="splash-fill"></div></div></div></div>
+<div class="splash" id="splash" role="status" aria-live="polite" aria-label="Caricamento"><div><div class="word" aria-hidden="true"><span style="animation-delay:0.15s">b</span><span style="animation-delay:0.21s">i</span><span style="animation-delay:0.27s">l</span><span style="animation-delay:0.33s">a</span><span style="animation-delay:0.39s">n</span><span style="animation-delay:0.45s">c</span><span style="animation-delay:0.51s">i</span><span style="animation-delay:0.57s">o</span><span style="animation-delay:0.63s">.</span></div><p class="tag">Lavoro e finanze · Federico</p></div><div class="bottom"><div class="row"><p id="splash-msg">Avvio…</p><span id="splash-pct" aria-hidden="true">0%</span></div><div class="track" aria-hidden="true"><div class="fill" id="splash-fill"></div></div></div></div>
 <div id="scr"><main id="view" class="pg" aria-live="polite"></main></div>
 <nav class="tabs" aria-label="Sezioni"><div class="in">
 <a href="#home" data-v="home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></a>
@@ -757,7 +757,7 @@ function buildWorkbook(ExcelJS,D,anno,oggi,nome){
   const MBr=['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT','NOV','DIC'];
   const y=computeYear(D,anno,oggi);
   const cats=((D.config&&D.config.categorie)||[]).slice().sort((a,b)=>a.ordine-b.ordine).filter(c=>((!c.dal||anno>=c.dal)&&(!c.al||anno<=c.al))||(D.movimenti||[]).some(x=>x.anno===anno&&x.categoria===c.id)||(D.previsioni||[]).some(p=>p.anno===anno&&p.categoria===c.id));
-  const wb=new ExcelJS.Workbook();wb.creator='Budget';wb.created=oggi;
+  const wb=new ExcelJS.Workbook();wb.creator='Bilancio';wb.created=oggi;
   const EUR='#,##0.00 "€";[Red]-#,##0.00 "€"';
   const INK='FF0D0F14',ACC='FF2F5BFF',SOFT='FFEEF0F4',LINE='FFE4E6EB',SUB='FF5A5F6B';
   const FILL={fissa:'FFFDE8E8',variabile:'FFFFF3E2',investimento:'FFE6F4EC',simulazione:'FFE6F1FB'};
@@ -771,7 +771,7 @@ function buildWorkbook(ExcelJS,D,anno,oggi,nome){
   // ---------- SPESE ----------
   const ws=wb.addWorksheet('Spese',{views:[{state:'frozen',xSplit:1,ySplit:4}],properties:{tabColor:{argb:ACC}}});
   ws.columns=[{width:28},...MBr.map(()=>({width:12})),{width:15},{width:13}];
-  ws.mergeCells('A1:O1');ws.getCell('A1').value=(nome||'Budget')+' · '+anno;ws.getCell('A1').font=font({size:16,bold:true});
+  ws.mergeCells('A1:O1');ws.getCell('A1').value=(nome||'Bilancio')+' · '+anno;ws.getCell('A1').font=font({size:16,bold:true});
   ws.getCell('A2').value=`Esportato il ${oggi.toLocaleDateString('it-IT')} · stipendio standard ${y.std.toLocaleString('it-IT',{minimumFractionDigits:2})} € · in corsivo grigio i mesi futuri (previsione)`;ws.getCell('A2').font=font({size:10,italic:true,color:{argb:SUB}});
   const hdr=r=>{const row=ws.getRow(r);row.values=[r===4?'ENTRATE':'SPESE',...MBr,'TOTALE ANNO','MEDIA'];head(row,r===4?'FF0A7A4E':ACC)};
   hdr(4);
@@ -2289,8 +2289,8 @@ function loadExcelJS(){if(window.ExcelJS)return Promise.resolve(window.ExcelJS);
   xlLib=new Promise((res,rej)=>{const tryN=i=>{if(i>=urls.length){xlLib=null;rej(new Error('lib'));return}const sc=document.createElement('script');sc.src=urls[i];sc.onload=()=>window.ExcelJS?res(window.ExcelJS):tryN(i+1);sc.onerror=()=>tryN(i+1);document.head.appendChild(sc)};tryN(0)});return xlLib}
 async function esporta(){
   toast('Preparo il file…');
-  try{const X=await loadExcelJS();const wb=buildWorkbook(X,S.D,S.anno,today(),cfg().nome||'Budget');const buf=await wb.xlsx.writeBuffer();
-    const name='Budget_'+S.anno+'.xlsx';const type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  try{const X=await loadExcelJS();const wb=buildWorkbook(X,S.D,S.anno,today(),cfg().nome||'Bilancio');const buf=await wb.xlsx.writeBuffer();
+    const name='Bilancio_'+S.anno+'.xlsx';const type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     const file=new File([buf],name,{type});
     if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:name})}catch(e){if(e&&e.name==='AbortError')return;throw e}return}
     const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('File pronto: '+name)}
@@ -2358,7 +2358,7 @@ function syncBanner(){
 }
 function vCollega(){
   const a=SYNC.api||{url:DEFAULT_URL,key:''};
-  return `<div class="hd"><div><p class="eyebrow">Budget</p><h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px">Collega i tuoi dati</h1></div></div>
+  return `<div class="hd"><div><p class="eyebrow">Bilancio</p><h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px">Collega i tuoi dati</h1></div></div>
   <section class="card"><p class="note">L'app salva tutto nel tuo Google Sheet. Incolla qui l'indirizzo dell'app web di Apps Script e la chiave che ti ha dato lo script (funzione setup o mostraChiave). Lo fai una volta sola: poi restano su questo telefono.</p>
   <form id="f-col" novalidate style="display:flex;flex-direction:column;gap:14px">
    <div class="field"><label for="c-url">Indirizzo app web (finisce con /exec)</label><input id="c-url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(a.url)}" placeholder="https://script.google.com/macros/s/…/exec"></div>

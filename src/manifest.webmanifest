@@ -1,6 +1,6 @@
 {
-  "name": "Budget",
-  "short_name": "Budget",
+  "name": "Bilancio",
+  "short_name": "Bilancio",
   "lang": "it",
   "start_url": "./#home",
   "scope": "./",

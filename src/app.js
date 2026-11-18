@@ -1060,8 +1060,8 @@ function loadExcelJS(){if(window.ExcelJS)return Promise.resolve(window.ExcelJS);
   xlLib=new Promise((res,rej)=>{const tryN=i=>{if(i>=urls.length){xlLib=null;rej(new Error('lib'));return}const sc=document.createElement('script');sc.src=urls[i];sc.onload=()=>window.ExcelJS?res(window.ExcelJS):tryN(i+1);sc.onerror=()=>tryN(i+1);document.head.appendChild(sc)};tryN(0)});return xlLib}
 async function esporta(){
   toast('Preparo il file…');
-  try{const X=await loadExcelJS();const wb=buildWorkbook(X,S.D,S.anno,today(),cfg().nome||'Budget');const buf=await wb.xlsx.writeBuffer();
-    const name='Budget_'+S.anno+'.xlsx';const type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  try{const X=await loadExcelJS();const wb=buildWorkbook(X,S.D,S.anno,today(),cfg().nome||'Bilancio');const buf=await wb.xlsx.writeBuffer();
+    const name='Bilancio_'+S.anno+'.xlsx';const type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     const file=new File([buf],name,{type});
     if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:name})}catch(e){if(e&&e.name==='AbortError')return;throw e}return}
     const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('File pronto: '+name)}
@@ -1129,7 +1129,7 @@ function syncBanner(){
 }
 function vCollega(){
   const a=SYNC.api||{url:DEFAULT_URL,key:''};
-  return `<div class="hd"><div><p class="eyebrow">Budget</p><h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px">Collega i tuoi dati</h1></div></div>
+  return `<div class="hd"><div><p class="eyebrow">Bilancio</p><h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px">Collega i tuoi dati</h1></div></div>
   <section class="card"><p class="note">L'app salva tutto nel tuo Google Sheet. Incolla qui l'indirizzo dell'app web di Apps Script e la chiave che ti ha dato lo script (funzione setup o mostraChiave). Lo fai una volta sola: poi restano su questo telefono.</p>
   <form id="f-col" novalidate style="display:flex;flex-direction:column;gap:14px">
    <div class="field"><label for="c-url">Indirizzo app web (finisce con /exec)</label><input id="c-url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(a.url)}" placeholder="https://script.google.com/macros/s/…/exec"></div>
