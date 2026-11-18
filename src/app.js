@@ -207,7 +207,7 @@ function homeHd(){
   const eye=S.priv?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const modeIcon=S.mode==='dark'?ICON.moon:S.mode==='light'?ICON.sun:ICON.auto;
   const modeLbl=S.mode==='dark'?'Tema scuro, tocca per automatico':S.mode==='light'?'Tema chiaro, tocca per scuro':'Tema automatico, tocca per chiaro';
-  return `<div class="hh"><a class="hh-av" href="#stallo" aria-label="Torna alla scelta Lavoro o Budget">${APP_INIZIALI}</a><div class="hh-m"><button class="ghost" data-act="mprev" aria-label="Mese precedente" ${S.mese<=1?'disabled':''}>${ICON.prev}</button><button class="ml" data-act="pickyear" aria-label="${MESI[S.mese-1]} ${S.anno}, tocca per cambiare anno">${MESI[S.mese-1]} ${S.anno}</button><button class="ghost" data-act="mnext" aria-label="Mese successivo" ${S.mese>=12?'disabled':''}>${ICON.next}</button></div><button class="icon-btn" data-act="priv" aria-pressed="${S.priv}" aria-label="${S.priv?'Mostra gli importi':'Nascondi gli importi'}">${eye}</button><button class="icon-btn" data-act="mode" aria-label="${modeLbl}">${modeIcon}</button></div>`+
+  return `<div class="hh"><a class="hh-av" href="#stallo" aria-label="Torna alla scelta Lavoro o Personale">${APP_INIZIALI}</a><div class="hh-m"><button class="ghost" data-act="mprev" aria-label="Mese precedente" ${S.mese<=1?'disabled':''}>${ICON.prev}</button><button class="ml" data-act="pickyear" aria-label="${MESI[S.mese-1]} ${S.anno}, tocca per cambiare anno">${MESI[S.mese-1]} ${S.anno}</button><button class="ghost" data-act="mnext" aria-label="Mese successivo" ${S.mese>=12?'disabled':''}>${ICON.next}</button></div><button class="icon-btn" data-act="priv" aria-pressed="${S.priv}" aria-label="${S.priv?'Mostra gli importi':'Nascondi gli importi'}">${eye}</button><button class="icon-btn" data-act="mode" aria-label="${modeLbl}">${modeIcon}</button></div>`+
    (nDc?`<button class="dc-badge hh-badge" data-act="godaconf">${nDc} ${nDc===1?'voce':'voci'} da confermare</button>`:'')+dvBadge();
 }
 function heroRing(y,m,mi){
@@ -571,7 +571,7 @@ function vEntrate(){
 
 // ---------- ALTRO ----------
 function vDati(){
-  return header('Dati',{month:false,h:'Dati e collegamento'})+`<section class="card dati-card"><h2>Esporta in Excel</h2><p class="note">Un file .xlsx con tre fogli: Spese (prospetto per categoria e mese, entrate, saldo e avanzo), Registro (tutti i movimenti con metodo e stato, filtrabile) e Stipendi (netti, lordi e confronto con l'anno prima).</p><button class="pill-btn" data-act="export" style="justify-content:center">Scarica Budget_${S.anno}.xlsx</button><hr class="sep"><h2>Collegamento dati</h2><p class="note">${esc(syncLine())}. I dati stanno nel tuo Google Sheet "Budget – Dati app".</p><div class="actions"><button class="pill-btn soft" data-act="syncnow">Sincronizza ora</button><a class="pill-btn soft" href="#collega" style="text-decoration:none;justify-content:center">Cambia collegamento</a></div></section>`;
+  return header('Dati',{month:false,h:'Dati e collegamento'})+`<section class="card dati-card"><h2>Esporta in Excel</h2><p class="note">Un file .xlsx con tre fogli: Spese (prospetto per categoria e mese, entrate, saldo e avanzo), Registro (tutti i movimenti con metodo e stato, filtrabile) e Stipendi (netti, lordi e confronto con l'anno prima).</p><button class="pill-btn" data-act="export" style="justify-content:center">Scarica Finance_${S.anno}.xlsx</button><hr class="sep"><h2>Collegamento dati</h2><p class="note">${esc(syncLine())}. I dati stanno nel tuo Google Sheet "Finance – Dati app".</p><div class="actions"><button class="pill-btn soft" data-act="syncnow">Sincronizza ora</button><a class="pill-btn soft" href="#collega" style="text-decoration:none;justify-content:center">Cambia collegamento</a></div></section>`;
 }
 function vAltro(){
   const nx=S.anno+1,creato=previsionaleCreato(nx);
@@ -579,7 +579,7 @@ function vAltro(){
   const azione=(act,t,sub)=>`<button class="item" data-act="${act}" data-k="${nx}"><span class="grow"><span class="t">${t}</span><span class="s">${sub}</span></span><span class="chev">${ICON.chev}</span></button>`;
   const gruppo=(tit,righe)=>`<p class="sec-title">${tit}</p><section class="card tight menu"><div class="list">${righe.join('')}</div></section>`;
   return header('Altro',{month:false,h:'Altro'})+
-   gruppo('Sezioni',[link('lavoro','Lavoro','Ore, straordinari, trasferte, busta stimata, ferie e ROL'),link('stallo','Schermata iniziale','Scelta tra Lavoro e Budget')])+
+   gruppo('Sezioni',[link('lavoro','Lavoro','Ore, straordinari, trasferte, busta stimata, ferie e ROL'),link('stallo','Schermata iniziale','Scelta tra Lavoro e Personale')])+
    gruppo('Automatico',[link('pagamenti','Pagamenti Apple Pay','Ogni pagamento col Wallet arriva qui già compilato, da validare')])+
    gruppo('Prospetti '+S.anno,[
      link('prospetto','Prospetto Uscite','Categorie mese per mese, saldo e avanzo'),
@@ -731,7 +731,7 @@ function sheetAdd(kind='uscita',pre=null){
    <div class="k-prev k-pscad"><div class="field k-scad"><button type="button" class="switch" id="a-scad" role="switch" aria-checked="false"><span class="sw-t"><strong>È una scadenza</strong><span class="small muted">Rata, bolletta, assicurazione: compare in "Prossime scadenze". La benzina o la spesa no.</span></span><span class="sw-k" aria-hidden="true"></span></button></div></div>
    <p class="note k-prev" id="a-pprev"></p>
    <div class="field k-desc"><label for="a-desc">Descrizione</label><input id="a-desc" autocomplete="off" placeholder="Es. Benzina, Cena, Reso Zalando…"></div>
-   <div class="two k-date"><div class="field"><label for="a-data">Data</label><input id="a-data" type="date" value="${isoToday()}"></div><div class="field"><label for="a-mese">Mese di addebito</label><select id="a-mese">${addebitoOptions(S.anno,S.anno,curM())}</select></div></div>
+   <div class="two k-date"><div class="field"><label for="a-data">Data</label><input id="a-data" type="date" value="${isoToday()}"></div><div class="field"><label for="a-mese">Mese di addebito</label><select id="a-mese">${addebitoOptions(S.anno,S.anno,curM())}</select></div></div><p class="note k-date" id="a-crednote" hidden>Carta di credito: la spesa conta nel mese dopo, quando arriva l'addebito. Puoi cambiarlo.</p>
    <div class="field k-rip"><label>Ripartizione</label><div id="a-ripbox"></div></div>
    <p class="note k-resonote">Lo storno o reso riduce la spesa della categoria: il saldo del mese risale dell'importo.</p>
    <div class="actions"><button class="pill-btn" type="submit">Salva</button></div>
@@ -763,13 +763,13 @@ function sheetAdd(kind='uscita',pre=null){
     el.querySelectorAll('[data-verso]').forEach(b=>b.onclick=()=>{verso=b.dataset.verso;sync()});
     el.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{sub=b.dataset.sub;sync()});
     el.querySelectorAll('[data-pdir]').forEach(b=>b.onclick=()=>{pdir=b.dataset.pdir;sync()});
-    let met=pre&&pre.met||(metodi().includes(lastMet())?lastMet():metodi()[0]);const metDraw=metBind(el,v=>{met=v});metDraw(met);
+    let met=pre&&pre.met||(metodi().includes(lastMet())?lastMet():metodi()[0]);const metDraw=metBind(el,v=>{met=v;if(d.value)d.onchange()});metDraw(met);
     catInline($('#a-cat'),'u');catInline($('#a-ecat'),'e');
     const fine=async()=>{if(pre&&pre.dvId)await del('davalidare/'+pre.dvId)};
     const sel=$('#a-cat');
     el.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{sel.value=b.dataset.cat;el.querySelectorAll('[data-cat]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
     sel.onchange=()=>el.querySelectorAll('[data-cat]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.cat===sel.value));
-    const d=$('#a-data'),ms=$('#a-mese');d.onchange=()=>{if(!d.value)return;const [y,mm]=d.value.split('-').map(Number);const k=y+'-'+mm;ms.value=[...ms.options].some(o=>o.value===k)?k:S.anno+'-'+mm};
+    const d=$('#a-data'),ms=$('#a-mese');d.onchange=()=>{if(!d.value)return;let [y,mm]=d.value.split('-').map(Number);if(metCredito(met)&&!(verso==='entrata')){mm++;if(mm>12){mm=1;y++}}const k=y+'-'+mm;ms.value=[...ms.options].some(o=>o.value===k)?k:S.anno+'-'+mm;const n=$('#a-crednote');if(n)n.hidden=!(metCredito(met)&&verso!=='entrata')};d.onchange();
     const imp=$('#a-imp');
     if(pre){if(pre.importo>0)imp.value=inp(pre.importo);if(pre.desc)$('#a-desc').value=pre.desc;if(pre.data){d.value=pre.data;d.onchange()}if(pre.cat){sel.value=pre.cat;sel.onchange()}}
     const RE=ripEditor($('#a-ripbox'),{tot:()=>num(imp.value),start:()=>leggiAddebito(ms.value)});
@@ -1363,3 +1363,6 @@ async function migraMetodi(){if(_migraMet||!S.ready||!SYNC.api||!SYNC.last)retur
   try{const l=localStorage.getItem('budget-metodo');if(l&&!METODI_DEF.includes(l))localStorage.removeItem('budget-metodo')}catch(e){}}
 
 function avanzoDa(y,mi){const a=Math.floor(y.ini/100),m0=y.ini%100;const da=a<y.anno?'Gennaio':MESI[m0-1];return da===MESI[mi]?MESI[mi]:`${da} – ${MESI[mi]}`}
+
+// carta di credito (gruppo «Carta di credito»): la spesa si addebita il mese dopo
+function metCredito(m){return /^carta di credito/i.test(metParti(m||'')[0]||'')}

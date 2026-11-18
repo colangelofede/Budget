@@ -1,5 +1,6 @@
 // ---------- personalizzazione: nome del proprietario (titolo, apertura, iniziali in Home, Excel) ----------
 const APP_NOME='Federico Colangelo';
+const APP_INIZIO='2026-11'; // mese da cui la sezione Personale conta saldi e avanzo (prima non ci sono le spese)
 const APP_INIZIALI=APP_NOME.split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()).slice(0,2).join('')||'B';
 const DEFAULT_URL='https://script.google.com/macros/s/AKfycbyZpiFFX0eBAodlavRIWcvqvk_JcQlAlrXvtauIL7gAbyvtO29oHMhAeDf-T979WrPX/exec'; // indirizzo dell'app web Apps Script: si inserisce dall'app al primo avvio
 // ---------- dati: Google Sheet tramite Apps Script, con copia locale e coda offline ----------

@@ -46,9 +46,9 @@ function vStallo(){
     <span class="st-row"><span class="st-ic">${LAV_ICON.pin}</span><span><b>${esc(riga)}</b><small>${esc(sub)}</small></span></span>
     <span class="st-big"><span class="muted small">Busta di ${MESI[t.getMonth()]} stimata</span><span class="num">${bigEur(lm.busta.netto)}</span><span class="muted small">Accredito 9 ${MESI[nm-1]} · ${oreF(lm.s30+lm.s40+lm.s50+lm.s70)} di straordinario</span></span></a>`;
   let bud;
-  if(!cats().length)bud=`<a class="st-card" href="#home"><span class="st-dir r"><span>Budget</span>${ICON.next}</span><span class="st-row"><span class="st-ic">${LAV_ICON.wallet}</span><span><b>Configura il budget</b><small>Categorie e prime spese</small></span></span></a>`;
+  if(!cats().length)bud=`<a class="st-card" href="#home"><span class="st-dir r"><span>Personale</span>${ICON.next}</span><span class="st-row"><span class="st-ic">${LAV_ICON.wallet}</span><span><b>Configura il budget</b><small>Categorie e prime spese</small></span></span></a>`;
   else{const y=computeYear(S.D,t.getFullYear(),t),m=y.mesi[t.getMonth()];const dim=new Date(t.getFullYear(),t.getMonth()+1,0).getDate(),left=dim-t.getDate()+1;
-    bud=`<a class="st-card" href="#home" aria-label="Apri il Budget"><span class="st-dir r"><span>Budget</span>${ICON.next}</span>
+    bud=`<a class="st-card" href="#home" aria-label="Apri la sezione Personale"><span class="st-dir r"><span>Personale</span>${ICON.next}</span>
     <span class="st-row"><span class="st-ic">${LAV_ICON.wallet}</span><span><b>${m.saldo<0?'Sei oltre di '+eur(-m.saldo):'Ti restano '+eur(m.saldo)}</b><small>${MESI[t.getMonth()]} · ${m.saldo>0?eur(m.saldo/left)+' al giorno per '+left+' '+(left===1?'giorno':'giorni'):'spese sopra la disponibilità'}</small></span></span>
     <span class="st-big"><span class="muted small">Avanzo cumulato</span><span class="num ${m.avanzo<0?'neg':'pos'}">${bigEur(m.avanzo,true)}</span><span class="muted small">${avanzoDa(y,t.getMonth())} ${t.getFullYear()}</span></span></a>`}
   return `<div class="st-top"><p class="eyebrow">${GG[t.getDay()]} ${t.getDate()} ${MESI[t.getMonth()]}</p><h1 class="st-h">Ciao ${esc(APP_NOME.split(' ')[0])}</h1></div>${syncBanner()}${lav}${bud}
@@ -59,7 +59,7 @@ function bigEur(v,segno){if(PRIV())return MASK+'<small> €</small>';const a=Mat
 // ---------- LAVORO · HOME ----------
 function lavHd(){
   const modeIcon=S.mode==='dark'?ICON.moon:S.mode==='light'?ICON.sun:ICON.auto;
-  return `<div class="hh"><a class="hh-av" href="#stallo" aria-label="Torna alla scelta Lavoro o Budget">${APP_INIZIALI}</a><div class="hh-m"><button class="ghost" data-act="mprev" aria-label="Mese precedente" ${S.mese<=1?'disabled':''}>${ICON.prev}</button><button class="ml" data-act="pickyear" aria-label="${MESI[S.mese-1]} ${S.anno}, tocca per cambiare anno">${MESI[S.mese-1]} ${S.anno}</button><button class="ghost" data-act="mnext" aria-label="Mese successivo" ${S.mese>=12?'disabled':''}>${ICON.next}</button></div><button class="icon-btn" data-act="priv" aria-pressed="${S.priv}" aria-label="${S.priv?'Mostra gli importi':'Nascondi gli importi'}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${S.priv?'<path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>':'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'}</svg></button><button class="icon-btn" data-act="mode" aria-label="Tema">${modeIcon}</button></div>`;
+  return `<div class="hh"><a class="hh-av" href="#stallo" aria-label="Torna alla scelta Lavoro o Personale">${APP_INIZIALI}</a><div class="hh-m"><button class="ghost" data-act="mprev" aria-label="Mese precedente" ${S.mese<=1?'disabled':''}>${ICON.prev}</button><button class="ml" data-act="pickyear" aria-label="${MESI[S.mese-1]} ${S.anno}, tocca per cambiare anno">${MESI[S.mese-1]} ${S.anno}</button><button class="ghost" data-act="mnext" aria-label="Mese successivo" ${S.mese>=12?'disabled':''}>${ICON.next}</button></div><button class="icon-btn" data-act="priv" aria-pressed="${S.priv}" aria-label="${S.priv?'Mostra gli importi':'Nascondi gli importi'}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${S.priv?'<path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>':'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'}</svg></button><button class="icon-btn" data-act="mode" aria-label="Tema">${modeIcon}</button></div>`;
 }
 function stipConf(anno,mese){return S.D.stipendi.find(x=>x.anno===anno&&x.mese===mese&&x.stato==='confermato')}
 function vLavoro(){
@@ -132,7 +132,7 @@ function vLavAltro(){
   return header('Lavoro',{month:false,badge:false,h:'Altro'})+
     gruppo('Busta paga',[link('lavbuste','Verifica buste '+S.anno,'Stima e busta vera a confronto, ore pagate, saldi ferie e ROL'),link('lavvoci','Premi e altre voci','Premio obiettivi, una tantum, festività non goduta, congedi'),link('lavpar','Parametri della busta','Paga oraria, mensa, trasferte, contributi, addizionali')])+
     gruppo('Presenze',[link('lavrilev','Rilevamento automatico','Comandi rapidi: arrivo e uscita dalla sede'),az('lavsede','Sede di lavoro',p.sedelat?'Posizione salvata · tocca per aggiornarla da qui':'Non impostata: tocca quando sei in officina')])+
-    gruppo('App',[link('stallo','Schermata iniziale','Scelta tra Lavoro e Budget'),link('home','Budget','Il tuo budget personale')]);
+    gruppo('App',[link('stallo','Schermata iniziale','Scelta tra Lavoro e Personale'),link('home','Personale','Entrate, spese e budget del mese')]);
 }
 function vLavBuste(){
   const oggi=today();const righe=[];for(let mo=12;mo>=1;mo--){const st=monthState(S.anno,mo,oggi);if(st==='futuro')continue;
@@ -286,7 +286,7 @@ function sheetBusta(anno,mese){
   const html=`<div class="tri two"><div class="field"><label for="b-n">Netto del mese</label><input id="b-n" inputmode="decimal" value="${c&&c.stato==='confermato'?inp(c.netto):''}" placeholder="Stima ${inp(m.busta.netto)}"></div><div class="field"><label for="b-l">Totale competenze</label><input id="b-l" inputmode="decimal" value="${c&&c.lordo!=null&&c.stato==='confermato'?inp(c.lordo):''}" placeholder="Stima ${inp(m.busta.lordo)}"></div></div>
    <section class="card fxc"><div class="row-head"><h2>Ore pagate in busta</h2></div>${r('s30','+30% (S1)')}${r('s40','+40%')}${r('s50','+50% (S2)')}${r('s70','+70%')}<p class="note" data-m></p></section>
    <div class="tri two"><div class="field"><label for="b-f">Saldo ferie (ore)</label><input id="b-f" inputmode="decimal" value="${s.ferie!=null?inp(s.ferie):''}"></div><div class="field"><label for="b-r">Saldo ROL/PAR (ore)</label><input id="b-r" inputmode="decimal" value="${s.rol!=null?inp(s.rol):''}"></div></div>
-   <p class="note">Il netto entra nel Budget come stipendio di ${MESI[mese-1]} (confermato). I saldi sono quelli in fondo alla busta (colonna Saldo).</p>
+   <p class="note">Il netto entra nella sezione Personale come stipendio di ${MESI[mese-1]} (confermato). I saldi sono quelli in fondo alla busta (colonna Saldo).</p>
    <div class="actions"><button type="button" class="pill-btn" data-save>Salva</button></div>`;
   openSheet('Busta di '+MESI[mese-1]+' '+anno,html,(el,close)=>{const $=q=>el.querySelector(q);
     const draw=()=>{let mis=0,eu=0;['s30','s40','s50','s70'].forEach(k=>{const v=num($('#b-'+k).value);const d=isNaN(v)?null:r2(f(k)-v);el.querySelector(`[data-d="${k}"]`).textContent=d==null?'':(d>0?'−'+oreN(d)+' h':d<0?'+'+oreN(-d)+' h':'ok');if(d>0){mis+=d;eu+=d*m.p.paga*(1+(+k.slice(1))/100)}});
@@ -360,7 +360,7 @@ function lavAct(a,id,k){
   }
   return false;
 }
-// ---------- swipe tra le sezioni (stallo ↔ Lavoro ↔ Budget) ----------
+// ---------- swipe tra le sezioni (stallo ↔ Lavoro ↔ Personale) ----------
 (function(){
   let t=null;const EDGE=28;const v=()=>document.getElementById('view');
   document.addEventListener('touchstart',e=>{t=null;if(e.touches.length!==1||!S.ready||sheetClose)return;const x=e.touches[0].clientX,w=window.innerWidth,sez=sezione();

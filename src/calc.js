@@ -49,7 +49,7 @@ function budgetChiuso(p,m){return !!(p.effettivi&&p.effettivi[String(m)]!=null)}
 // mesi chiusi (passati) con budget non ancora portati a consuntivo
 function budgetDaChiudere(D,oggi){const out={};(D.previsioni||[]).filter(p=>p.tipo==='budget').forEach(p=>{for(let m=1;m<=12;m++){const v=p.importi&&p.importi[m-1];if(v==null||budgetChiuso(p,m)||monthState(p.anno,m,oggi)!=='chiuso')continue;const k=p.anno*100+m;(out[k]=out[k]||{anno:p.anno,m,prev:[]}).prev.push(p)}});return Object.keys(out).sort().map(k=>out[k])}
 // mese da cui si contano saldi e avanzo: il primo con un movimento registrato (prima l'app non conosce le spese); senza movimenti, il mese corrente
-function inizioConteggio(D,oggi){const k=(D.movimenti||[]).map(x=>(+x.anno)*100+(+x.mese)).filter(v=>v>0);oggi=oggi||new Date();return k.length?Math.min(...k):oggi.getFullYear()*100+oggi.getMonth()+1}
+function inizioConteggio(D,oggi){if(typeof APP_INIZIO!=='undefined'&&APP_INIZIO){const [a,m]=String(APP_INIZIO).split('-').map(Number);return a*100+m}const k=(D.movimenti||[]).map(x=>(+x.anno)*100+(+x.mese)).filter(v=>v>0);oggi=oggi||new Date();return k.length?Math.min(...k):oggi.getFullYear()*100+oggi.getMonth()+1}
 function computeYear(D,anno,oggi){
   const ini=inizioConteggio(D,oggi);
   const cats=((D.config&&D.config.categorie)||[]).slice().sort((a,b)=>a.ordine-b.ordine);
