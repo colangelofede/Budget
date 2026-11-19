@@ -446,6 +446,15 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 .tri .field input{height:50px;font-size:17px;font-weight:700;padding:0 8px}
 .tri .field input[type=time],.tri .field input[type=date]{text-align:center;justify-content:center}
 .tri [hidden],[data-sez][hidden]{display:none}
+/* blocchi del foglio Giornata: stessa distanza del resto del foglio */
+[data-sez="lavoro"],[data-sez="assenza"]{display:flex;flex-direction:column;gap:14px}
+/* trasferta: nome e tariffa, due colonne uguali */
+.trgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.trgrid button{min-height:56px;padding:8px 14px;border-radius:16px;border:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;text-align:left;color:var(--ink)}
+.trgrid b{font-size:15px;font-weight:700;white-space:nowrap}
+.trgrid small{font-size:12.5px;font-weight:600;color:var(--sub)}
+.trgrid button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.trgrid button[aria-pressed="true"] small{color:var(--on-accent);opacity:.75}
 .det{display:flex;align-items:center;gap:3px;justify-content:center;font-size:11.5px;color:var(--sub);font-weight:600;white-space:nowrap}
 .fxc{gap:0;padding:16px 16px 12px}
 .fxc .row-head{margin-bottom:6px}

@@ -2,7 +2,8 @@
 // Regole (CONTESTO-APP-BUDGET.md): orario lun–ven 08:00–17:15, pausa 12:15–13:30; straordinario feriale +30% fino a 10 h,
 // +40% oltre; sabato +50% prime 8 h, poi +70%; domenica e festivi +70%; 22:00–06:00 sempre +70%.
 // Busta del mese M = ore del mese M, accredito il 9 del mese M+1.
-const LAV_TRASF=[['itg','IT giorno','In Italia, rientro a casa in giornata'],['itn','IT notte','In Italia, almeno una notte fuori'],['eu','EU','Unione Europea, almeno una notte'],['extra','Extra EU','Australia, Nord e Sud America, almeno una notte'],['rischio','Paesi a rischio','Tutti gli altri paesi, almeno una notte']];
+// [chiave, nome, descrizione, sigla per il calendario]
+const LAV_TRASF=[['itg','IT giorno','In Italia, rientro a casa in giornata','IT'],['itn','IT notte','In Italia, almeno una notte fuori','IT N'],['eu','EU','Unione Europea, almeno una notte','EU'],['extra','Australia/Americhe','Australia, Nord e Sud America, almeno una notte','AME'],['rischio','Extra EU','Tutti gli altri paesi fuori dall\'UE, almeno una notte','EXTRA']];
 const LAV_TIPI=[['lavoro','Lavoro'],['ferie','Ferie'],['rol','ROL'],['permesso','Permesso'],['malattia','Malattia'],['congedo','Congedo'],['festivo','Festivo']];
 // Parametri della busta (dalla busta di Settembre 2026). Una riga del foglio "Lavoro" vale dal mese "dal" in poi.
 const LAV_PAR0={dal:'2000-01',paga:20.66717,minimo:2370.33,premio:37.18,mensa:2.72,indmensa:1.34,cometa:1.2,ivs:9.19,cigs:0.3,

@@ -91,7 +91,7 @@ function vCalendario(){
   let cells='';for(let i=0;i<off;i++)cells+='<span class="cd vuoto"></span>';
   m.giorni.forEach(g=>{const d=+g.iso.slice(8);const ore=g.s30+g.s40+g.s50+g.s70;let tag='',cls='';
     if(g.tipo==='ferie')tag='Ferie';else if(g.tipo==='rol')tag='ROL';else if(g.tipo==='permesso')tag='Perm.';else if(g.tipo==='malattia')tag='Mal.';else if(g.tipo==='congedo')tag='Cong.';else if(g.tipo==='festivo')tag='Fest.';
-    else if(g.trasf)tag=(trasfNome(g.trasf).split(' ')[0]==='IT'?'IT':trasfNome(g.trasf).split(' ')[0]).slice(0,5)+(g.daCompilare?' ?':'');
+    else if(g.trasf)tag=((LAV_TRASF.find(x=>x[0]===g.trasf)||[])[3]||'Trasf.')+(g.daCompilare?' ?':'');
     else if(ore)tag='+'+oreN(ore);else if(g.tipo==='lavoro'&&g.tg==='feriale')tag='—';
     if(g.stato==='previsto'||g.stato==='daconf')cls+=' prev';if(g.fest||g.tg==='festivo')cls+=' fest';if(g.iso===oi)cls+=' oggi';if(g.trasf)cls+=' tr';if(g.daCompilare)cls+=' warn';
     cells+=`<button class="cd${cls}" data-act="lavgiorno" data-k="${g.iso}" aria-label="${giornoLabel(g.iso)}${tag?', '+tag:''}"><b>${d}</b><i>${esc(tag)}</i></button>`});
@@ -147,7 +147,7 @@ function vLavVoci(){
   return header('Lavoro',{month:false,badge:false,h:'Premi e altre voci'})+`<section class="card"><div class="row-head"><h2>${S.anno}</h2><button class="link" data-act="lavvoce">+ Aggiungi</button></div><p class="note">Importi lordi in busta: positivi per premi e una tantum, negativi per trattenute prima delle tasse (es. assenza).</p><div class="list">${lista}</div></section>`;
 }
 const LAV_PAR_LBL=[['paga','Paga oraria','€/h','Retribuzione mensile ÷ 173'],['premio','Premio produzione mensile','€',''],['minimo','Minimo contrattuale','€','Base del contributo Cometa'],['mensa','Mensa','€ al pasto','Trattenuta in busta'],['indmensa','Indennità mensa','€/mese',''],
-  ['itg','Trasferta IT giorno','€/giorno',''],['itn','Trasferta IT notte','€/giorno',''],['eu','Trasferta EU','€/giorno',''],['extra','Trasferta Extra EU','€/giorno',''],['rischio','Trasferta paesi a rischio','€/giorno',''],['esenteest','Trasferta estero esente','€/giorno','Senza tasse né contributi (vitto e alloggio pagati)'],
+  ['itg','Trasferta IT giorno','€/giorno',''],['itn','Trasferta IT notte','€/giorno',''],['eu','Trasferta EU','€/giorno',''],['extra','Trasferta Australia/Americhe','€/giorno',''],['rischio','Trasferta Extra EU','€/giorno',''],['esenteest','Trasferta estero esente','€/giorno','Senza tasse né contributi (vitto e alloggio pagati)'],
   ['ivs','Contributo IVS','%',''],['cigs','Contributo CIGS','%',''],['cometa','Fondo Cometa','% del minimo',''],['addiz','Addizionali regionale e comunale','€/mese',''],['addizmesi','Mesi delle addizionali','es. 1-11',''],['ivsaggsoglia','Soglia IVS aggiuntivo 1%','€/mese','Oltre questo imponibile INPS'],
   ['entrata','Entrata standard','hh:mm',''],['uscita','Uscita standard','hh:mm',''],['pausa','Pausa abituale','minuti','Dalle 12:15'],['arrot','Arrotondamento straordinario','minuti','Per difetto'],['feriemese','Ferie maturate','ore/mese',''],['rolmese','ROL maturati','ore/mese','']];
 function vLavPar(){
@@ -180,7 +180,7 @@ function sheetGiorno(iso){
   const rilA=tb.find(x=>x.evento==='arrivo'),rilU=tb.filter(x=>x.evento==='uscita').pop();
   const ent=g.entrata||(g.tg==='feriale'?p.entrata:''),usc=g.uscita||(g.tg==='feriale'?p.uscita:''),pau=g.pausa??(g.tg==='feriale'?p.pausa:0);
   const tipi=LAV_TIPI.map(([k,l])=>`<button type="button" data-tipo="${k}" aria-pressed="${k===tipo}">${l}</button>`).join('');
-  const trs=[['','Nessuna']].concat(LAV_TRASF.map(x=>[x[0],x[1]])).map(([k,l])=>`<button type="button" data-tr="${k}" aria-pressed="${k===trasf}">${l}</button>`).join('');
+  const trs=[['','Nessuna','In sede']].concat(LAV_TRASF.map(x=>[x[0],x[1],eur(+p[x[0]]||0).replace(',00','')+' al giorno'])).map(([k,l,s])=>`<button type="button" data-tr="${k}" aria-pressed="${k===trasf}"><b>${l}</b><small>${s}</small></button>`).join('');
   const fx=(k,n,sub)=>`<div class="fx" data-fx="${k}"><span class="fx-l"><b>${n}</b><small>${sub}</small></span><span class="fx-st"><button type="button" data-d="-1" aria-label="Togli un quarto d'ora a ${n}">−</button><span class="num" data-v></span><button type="button" data-d="1" aria-label="Aggiungi un quarto d'ora a ${n}">+</button></span><span class="fx-e num" data-e></span></div>`;
   const html=`<div class="catpick" data-g="tipo">${tipi}</div>
    <div data-sez="lavoro">
@@ -190,7 +190,7 @@ function sheetGiorno(iso){
      <div class="fx base"><span class="fx-l"><b>Ordinarie</b><small data-ordsub></small></span><span class="fx-e num" data-ord></span></div>
      ${fx('s30','+30%','Feriale fino a 10 h')}${fx('s40','+40%','Feriale oltre le 10 h')}${fx('s50','+50%','Sabato, prime 8 h')}${fx('s70','+70%','Notte 22–06, sabato oltre 8 h, festivi')}
      <p class="note" data-nota></p><button type="button" class="link" data-ricalc hidden>Ricalcola dagli orari</button></section>
-    <div class="field"><label>Trasferta</label><div class="catpick" data-g="tr">${trs}</div></div>
+    <div class="field"><label>Trasferta</label><div class="trgrid" data-g="tr">${trs}</div></div>
     <button type="button" class="switch" role="switch" data-mensa aria-checked="${mensa}"><span class="sw-t"><b>Mensa</b><span class="small muted">Trattenuta ${eur(p.mensa)}</span></span><span class="sw-k"></span></button>
    </div>
    <div data-sez="assenza"><div class="field"><label for="g-a">Ore</label><input id="g-a" inputmode="decimal" value="${inp(g.assOre||(g.tg==='feriale'?8:0))}"></div><p class="note">Per ferie, ROL e permessi indica le ore usate (8 per un giorno intero).</p></div>
