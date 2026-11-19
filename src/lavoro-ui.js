@@ -147,8 +147,8 @@ function vLavVoci(){
   return header('Lavoro',{month:false,badge:false,h:'Premi e altre voci'})+`<section class="card"><div class="row-head"><h2>${S.anno}</h2><button class="link" data-act="lavvoce">+ Aggiungi</button></div><p class="note">Importi lordi in busta: positivi per premi e una tantum, negativi per trattenute prima delle tasse (es. assenza).</p><div class="list">${lista}</div></section>`;
 }
 const LAV_PAR_LBL=[['paga','Paga oraria','€/h','Retribuzione mensile ÷ 173'],['premio','Premio produzione mensile','€',''],['minimo','Minimo contrattuale','€','Base del contributo Cometa'],['mensa','Mensa','€ al pasto','Trattenuta in busta'],['indmensa','Indennità mensa','€/mese',''],
-  ['itg','Trasferta IT giorno','€/giorno',''],['itn','Trasferta IT notte','€/giorno',''],['eu','Trasferta EU','€/giorno',''],['extra','Trasferta Extra EU','€/giorno',''],['rischio','Trasferta paesi a rischio','€/giorno',''],
-  ['ivs','Contributo IVS','%',''],['cigs','Contributo CIGS','%',''],['cometa','Fondo Cometa','% del minimo',''],['addiz','Addizionali regionale e comunale','€/mese',''],['addizmesi','Mesi delle addizionali','es. 1-9',''],
+  ['itg','Trasferta IT giorno','€/giorno',''],['itn','Trasferta IT notte','€/giorno',''],['eu','Trasferta EU','€/giorno',''],['extra','Trasferta Extra EU','€/giorno',''],['rischio','Trasferta paesi a rischio','€/giorno',''],['esenteest','Trasferta estero esente','€/giorno','Senza tasse né contributi (vitto e alloggio pagati)'],
+  ['ivs','Contributo IVS','%',''],['cigs','Contributo CIGS','%',''],['cometa','Fondo Cometa','% del minimo',''],['addiz','Addizionali regionale e comunale','€/mese',''],['addizmesi','Mesi delle addizionali','es. 1-11',''],['ivsaggsoglia','Soglia IVS aggiuntivo 1%','€/mese','Oltre questo imponibile INPS'],
   ['entrata','Entrata standard','hh:mm',''],['uscita','Uscita standard','hh:mm',''],['pausa','Pausa abituale','minuti','Dalle 12:15'],['arrot','Arrotondamento straordinario','minuti','Per difetto'],['feriemese','Ferie maturate','ore/mese',''],['rolmese','ROL maturati','ore/mese','']];
 function vLavPar(){
   const p=lavPar(S.D,S.anno,S.mese);
@@ -290,7 +290,8 @@ function sheetBusta(anno,mese){
    <div class="actions"><button type="button" class="pill-btn" data-save>Salva</button></div>`;
   openSheet('Busta di '+MESI[mese-1]+' '+anno,html,(el,close)=>{const $=q=>el.querySelector(q);
     const draw=()=>{let mis=0,eu=0;['s30','s40','s50','s70'].forEach(k=>{const v=num($('#b-'+k).value);const d=isNaN(v)?null:r2(f(k)-v);el.querySelector(`[data-d="${k}"]`).textContent=d==null?'':(d>0?'−'+oreN(d)+' h':d<0?'+'+oreN(-d)+' h':'ok');if(d>0){mis+=d;eu+=d*m.p.paga*(1+(+k.slice(1))/100)}});
-      $('[data-m]').textContent=mis>0?`Mancano ${oreN(mis)} h rispetto alle ore registrate: circa ${eur(r2(eu))} lordi.`:'Inserisci le ore indicate in busta (S1 = 30%, S2 = 50%…) per vedere se manca qualcosa.'};
+      const ob=r2((m.voci||[]).filter(v=>/obiettivi/i.test(String(v.descrizione||''))).reduce((a,v)=>a+ +v.importo,0));
+      $('[data-m]').textContent=mis>0?`Ore fuori busta: ${oreN(mis)} h, circa ${eur(r2(eu))} lordi.`+(ob?` Premio obiettivi in busta ${eur(ob)}: ${Math.abs(ob-eu)<1?'torna':(ob>eu?'+':'−')+eur(r2(Math.abs(ob-eu)))+(ob>eu?' a tuo favore':' da chiedere')}.`:' Se l\'azienda le paga come Premio obiettivi, aggiungilo tra i Premi di questo mese.'):'Inserisci le ore indicate in busta (S1 = 30%, S2 = 50%…) per vedere se manca qualcosa.'};
     el.querySelectorAll('.bx').forEach(i=>i.addEventListener('input',draw));
     $('[data-save]').onclick=async()=>{const n=num($('#b-n').value),l=num($('#b-l').value);const sv={anno,mese,ferie:null,rol:null};let any=false;
       ['s30','s40','s50','s70'].forEach(k=>{const v=num($('#b-'+k).value);sv[k+'b']=isNaN(v)?null:v;if(!isNaN(v))any=true});const fe=num($('#b-f').value),ro=num($('#b-r').value);if(!isNaN(fe)){sv.ferie=fe;any=true}if(!isNaN(ro)){sv.rol=ro;any=true}
@@ -314,15 +315,17 @@ function sheetPar(k){
   const L=LAV_PAR_LBL.find(x=>x[0]===k);const p=lavPar(S.D,S.anno,S.mese);const txt=typeof p[k]==='number'?String(p[k]).replace('.',','):String(p[k]??'');
   const html=`<div class="field"><label for="p-v">${L[1]} (${L[2]})</label><input id="p-v" value="${esc(txt)}" ${typeof p[k]==='number'?'inputmode="decimal"':''}></div>
    <div class="field"><label for="p-d">Valido da</label><select id="p-d">${(()=>{let o='';for(let a=S.anno-1;a<=S.anno+1;a++)for(let mm=1;mm<=12;mm++)o+=`<option value="${a}-${pad(mm)}" ${a===S.anno&&mm===S.mese?'selected':''}>${MESI[mm-1]} ${a}</option>`;return o})()}</select></div>
-   <p class="note">Vale da quel mese in poi, finché non lo cambi di nuovo.</p><div class="actions"><button type="button" class="pill-btn" data-save>Salva</button></div>`;
-  openSheet(L[1],html,(el,close)=>{el.querySelector('[data-save]').onclick=async()=>{let v=el.querySelector('#p-v').value.trim();const dal=el.querySelector('#p-d').value;
+   <p class="note">Vale da quel mese in poi, finché non lo cambi di nuovo.${k==='paga'?' Le tariffe dello straordinario si aggiornano da sole:':''}</p>${k==='paga'?'<section class="card klist" data-tar></section>':''}<div class="actions"><button type="button" class="pill-btn" data-save>Salva</button></div>`;
+  openSheet(L[1],html,(el,close)=>{
+    if(k==='paga'){const tar=()=>{const v=num(el.querySelector('#p-v').value);el.querySelector('[data-tar]').innerHTML=[30,40,50,70].map(x=>`<div class="krow"><span class="kl"><span>+${x}%</span></span><span class="kv num">${isNaN(v)?'—':eur(r2(v*(1+x/100)))+'/h'}</span></div>`).join('')};el.querySelector('#p-v').addEventListener('input',tar);tar()}
+el.querySelector('[data-save]').onclick=async()=>{let v=el.querySelector('#p-v').value.trim();const dal=el.querySelector('#p-d').value;
     if(LAV_NUM.includes(k)){v=num(v);if(isNaN(v)){toast('Valore non valido');return}}else if(['entrata','uscita'].includes(k)&&!/^\d{1,2}:\d{2}$/.test(v)){toast('Scrivi l\'orario come 08:00');return}
     close();await put('lavoro/'+dal+'-'+k,{dal,[k]:v});toast('Parametro salvato')}});
 }
 function sheetDettBusta(){
   const m=lavM(),b=m.busta;const r=(l,v,c)=>`<div class="krow"><span class="kl"><span>${l}</span></span><span class="kv num ${c||''}">${v}</span></div>`;
   openSheet('Busta di '+MESI[S.mese-1]+' stimata',`<section class="card klist">${r('Retribuzione (173 h)',eur(b.base))}${r('Straordinari',eur(b.straord))}${r('Trasferte',eur(b.trasf))}${r('Premio produzione + indennità mensa',eur(r2(b.premio+b.indmensa)))}${b.premi?r('Premi e altre voci',eur(b.premi)):''}${b.tratt?r('Trattenute prima delle tasse','−'+eur(b.tratt)):''}${r('<b>Totale competenze</b>','<b>'+eur(b.lordo)+'</b>')}
-    ${r('INPS (IVS 9,19% + CIGS 0,30%)','−'+eur(r2(b.ivs+b.cigs)))}${r('Fondo Cometa','−'+eur(b.cometa))}${r('IRPEF su '+eur(b.imp),'−'+eur(b.irpef))}${b.addiz?r('Addizionali','−'+eur(b.addiz)):''}${r('Mensa','−'+eur(b.mensa))}${r('<b>Netto</b>','<b>'+eur(b.netto)+'</b>')}</section>
+    ${b.obiettivi?r('Premio obiettivi in busta','già nelle ore','muted'):''}${b.esente?r('Di cui trasferte esenti',eur(b.esente),'muted'):''}${r('INPS (IVS + CIGS'+(b.ivsagg?' + IVS agg. 1%':'')+')','−'+eur(r2(b.ivs+b.ivsagg+b.cigs)))}${r('Fondo Cometa','−'+eur(b.cometa))}${r('IRPEF su '+eur(b.imp),'−'+eur(b.irpef))}${b.addiz?r('Addizionali','−'+eur(b.addiz)):''}${r('Mensa','−'+eur(b.mensa))}${r('<b>Netto</b>','<b>'+eur(b.netto)+'</b>')}</section>
     <p class="note">IRPEF a scaglioni mensili 23% / 33% / 43% come nelle tue buste 2026, senza detrazioni. A Dicembre il conguaglio di fine anno può cambiare il netto.</p>`,null);
 }
 // ---------- posizione: sede e domanda sulla trasferta ----------

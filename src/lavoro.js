@@ -6,9 +6,9 @@ const LAV_TRASF=[['itg','IT giorno','In Italia, rientro a casa in giornata'],['i
 const LAV_TIPI=[['lavoro','Lavoro'],['ferie','Ferie'],['rol','ROL'],['permesso','Permesso'],['malattia','Malattia'],['congedo','Congedo'],['festivo','Festivo']];
 // Parametri della busta (dalla busta di Settembre 2026). Una riga del foglio "Lavoro" vale dal mese "dal" in poi.
 const LAV_PAR0={dal:'2000-01',paga:20.66717,minimo:2370.33,premio:37.18,mensa:2.72,indmensa:1.34,cometa:1.2,ivs:9.19,cigs:0.3,
-  addiz:144.14,addizmesi:'1-9',arrot:15,itg:22,itn:39,eu:49,extra:65,rischio:75,feriemese:14,rolmese:8.66667,
+  addiz:144.14,addizmesi:'1-11',esenteit:0,esenteest:25.82,ivsagg:1,ivsaggsoglia:4685,arrot:15,itg:22,itn:39,eu:49,extra:65,rischio:75,feriemese:14,rolmese:8.66667,
   entrata:'08:00',uscita:'17:15',pausa:30,pausainizio:'12:15',sedelat:null,sedelon:null,raggio:1};
-const LAV_NUM=['paga','minimo','premio','mensa','indmensa','cometa','ivs','cigs','addiz','arrot','itg','itn','eu','extra','rischio','feriemese','rolmese','pausa','sedelat','sedelon','raggio'];
+const LAV_NUM=['esenteit','esenteest','ivsagg','ivsaggsoglia','paga','minimo','premio','mensa','indmensa','cometa','ivs','cigs','addiz','arrot','itg','itn','eu','extra','rischio','feriemese','rolmese','pausa','sedelat','sedelon','raggio'];
 // Scaglioni IRPEF mensili 2026 (23% fino a 28.000, 33% fino a 50.000, 43% oltre), verificati sulle buste Lug–Set 2026
 const LAV_IRPEF=[[28000/12,.23],[50000/12,.33],[Infinity,.43]];
 
@@ -101,22 +101,29 @@ function lavMese(D,anno,mese,oggi){
     if(!prevista&&(x.ord>0||x.s30+x.s40+x.s50+x.s70>0||x.trasf))t.lavorati++;
     if(x.stato==='daconf')t.daConf++;if(x.daCompilare)t.daCompilare++}
   const voci=((D&&D.voci)||[]).filter(v=>+v.anno===anno&&+v.mese===mese);
-  const b=lavBusta(p,t,voci,mese);
+  const b=lavBusta(p,t,voci,mese,{stima:true});
   return Object.assign({anno,mese,p,giorni,voci},t,{busta:b});
 }
-function lavBusta(p,t,voci,mese){
-  const ore=t.s30+t.s40+t.s50+t.s70;
+// Premio obiettivi = ore oltre quelle rappresentabili in busta: nella stima (opt.stima) è già contato nelle ore lavorate
+function lObiettivi(v){return /obiettivi/i.test(String(v.descrizione||''))}
+function lavBusta(p,t,voci,mese,opt){
+  opt=opt||{};const ore=t.s30+t.s40+t.s50+t.s70;
   const straord=lr2(t.s30*p.paga*1.3)+lr2(t.s40*p.paga*1.4)+lr2(t.s50*p.paga*1.5)+lr2(t.s70*p.paga*1.7);
   const trasf=Object.keys(t.trasf).reduce((a,k)=>a+t.trasf[k]*(+p[k]||0),0);
-  const premi=voci.filter(v=>+v.importo>0).reduce((a,v)=>a+ +v.importo,0),tratt=voci.filter(v=>+v.importo<0).reduce((a,v)=>a- +v.importo,0);
-  const noinps=voci.filter(v=>+v.importo>0&&lavBool(v.noinps)).reduce((a,v)=>a+ +v.importo,0);
+  // parte esente delle trasferte: Italia fino a esenteit al giorno, estero fino a esenteest (vitto e alloggio forniti)
+  const esente=lr2(Object.keys(t.trasf).reduce((a,k)=>{const lim=(k==='itg'||k==='itn')?p.esenteit:p.esenteest;return a+t.trasf[k]*Math.min(+p[k]||0,+lim||0)},0));
+  const obiettivi=voci.filter(v=>+v.importo>0&&lObiettivi(v)).reduce((a,v)=>a+ +v.importo,0);
+  const vv=opt.stima?voci.filter(v=>!lObiettivi(v)):voci;
+  const premi=vv.filter(v=>+v.importo>0).reduce((a,v)=>a+ +v.importo,0),tratt=vv.filter(v=>+v.importo<0).reduce((a,v)=>a- +v.importo,0);
+  const noinps=vv.filter(v=>+v.importo>0&&lavBool(v.noinps)).reduce((a,v)=>a+ +v.importo,0);
   const base=lr2(p.paga*173);
   const comp=lr2(base+straord+trasf+p.premio+p.indmensa+premi);
-  const inps=Math.round(comp-tratt-noinps);const ivs=lr2(inps*p.ivs/100),cigs=lr2(inps*p.cigs/100),cometa=lr2(p.minimo*p.cometa/100);
-  const imp=lr2(comp-tratt-ivs-cigs-cometa);let irpef=0,prev=0;LAV_IRPEF.forEach(([lim,al])=>{if(imp>prev)irpef+=(Math.min(imp,lim)-prev)*al;prev=lim});irpef=lr2(irpef);
+  const inps=Math.round(comp-tratt-noinps-esente);const ivs=lr2(inps*p.ivs/100),cigs=lr2(inps*p.cigs/100),cometa=lr2(p.minimo*p.cometa/100);
+  const ivsagg=lr2(Math.max(0,inps-(+p.ivsaggsoglia||Infinity))*(+p.ivsagg||0)/100);
+  const imp=lr2(comp-tratt-esente-ivs-ivsagg-cigs-cometa);let irpef=0,prev=0;LAV_IRPEF.forEach(([lim,al])=>{if(imp>prev)irpef+=(Math.min(imp,lim)-prev)*al;prev=lim});irpef=lr2(irpef);
   const addiz=lAddizMese(p,mese)?+p.addiz||0:0,mensa=lr2(t.mensa*p.mensa);
-  const netto=lr2(comp-tratt-ivs-cigs-cometa-irpef-addiz-mensa);
-  return {base,straord:lr2(straord),trasf:lr2(trasf),premio:p.premio,indmensa:p.indmensa,premi:lr2(premi),tratt:lr2(tratt),lordo:comp,inps,ivs,cigs,cometa,imp,irpef,addiz,mensa,netto,ore};
+  const netto=lr2(comp-tratt-ivs-ivsagg-cigs-cometa-irpef-addiz-mensa);
+  return {base,straord:lr2(straord),trasf:lr2(trasf),esente,premio:p.premio,indmensa:p.indmensa,premi:lr2(premi),obiettivi:lr2(obiettivi),tratt:lr2(tratt),lordo:comp,inps,ivs,ivsagg,cigs,cometa,imp,irpef,addiz,mensa,netto,ore};
 }
 // Netto stimato per il Budget (calc.js): solo dai mesi in cui l'app tiene le ore
 function lavPrimoMese(D){const o=((D&&D.ore)||[]).map(x=>x.id).filter(Boolean).sort();return o.length?o[0].slice(0,7):null}
