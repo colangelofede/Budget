@@ -89,12 +89,12 @@ function vLavoro(){
 function vCalendario(){
   const m=lavM(),oi=isoToday();const first=lDate(lIso(S.anno,S.mese,1)).getDay();const off=(first+6)%7;
   let cells='';for(let i=0;i<off;i++)cells+='<span class="cd vuoto"></span>';
-  m.giorni.forEach(g=>{const d=+g.iso.slice(8);const ore=g.s30+g.s40+g.s50+g.s70;let tag='',cls='';
+  m.giorni.forEach(g=>{const d=+g.iso.slice(8);const ore=g.s30+g.s40+g.s50+g.s70;let tag='',cls='',sig='';
     if(g.tipo==='ferie')tag='Ferie';else if(g.tipo==='rol')tag='ROL';else if(g.tipo==='permesso')tag='Perm.';else if(g.tipo==='malattia')tag='Mal.';else if(g.tipo==='congedo')tag='Cong.';else if(g.tipo==='festivo')tag='Fest.';
-    else if(g.trasf)tag=((LAV_TRASF.find(x=>x[0]===g.trasf)||[])[3]||'Trasf.')+(g.daCompilare?' ?':'');
+    else if(g.trasf){sig=(LAV_TRASF.find(x=>x[0]===g.trasf)||[])[3]||'Trasf.';tag=g.daCompilare?'?':ore?'+'+oreN(ore):'—'}
     else if(ore)tag='+'+oreN(ore);else if(g.tipo==='lavoro'&&g.tg==='feriale')tag='—';
     if(g.stato==='previsto'||g.stato==='daconf')cls+=' prev';if(g.fest||g.tg==='festivo')cls+=' fest';if(g.iso===oi)cls+=' oggi';if(g.trasf)cls+=' tr';if(g.daCompilare)cls+=' warn';
-    cells+=`<button class="cd${cls}" data-act="lavgiorno" data-k="${g.iso}" aria-label="${giornoLabel(g.iso)}${tag?', '+tag:''}"><b>${d}</b><i>${esc(tag)}</i></button>`});
+    cells+=`<button class="cd${cls}" data-act="lavgiorno" data-k="${g.iso}" aria-label="${giornoLabel(g.iso)}${sig?', trasferta '+sig:''}${tag?', '+tag:''}"><s>${esc(sig)}</s><b>${d}</b><i>${esc(tag)}</i></button>`});
   const leg=`<p class="note">Tratteggiati: giorni non ancora fatti o senza dati, contati con l'orario standard (${m.p.entrata}–${m.p.uscita}, pausa ${m.p.pausa} min). Tocca un giorno per registrarlo o correggerlo.</p>`;
   const lista=m.giorni.filter(g=>g.tipo!=='riposo'&&!(g.stato==='previsto')).slice().reverse().map(g=>{const ore=g.s30+g.s40+g.s50+g.s70;const sub=g.tipo!=='lavoro'?(LAV_TIPI.find(x=>x[0]===g.tipo)||[0,g.tipo])[1]+(g.assOre?' · '+oreF(g.assOre):''):(g.trasf?trasfNome(g.trasf)+' · ':'')+(g.entrata&&!g.manuale&&!g.trasf?g.entrata+'–'+(g.uscita||'…'):g.manuale?'Ore a mano':'')+(g.stato==='daconf'?' · da confermare':g.fonte==='timbr'?' · rilevata':'');
     return `<button class="item ${g.stato==='daconf'?'is-prev':''}" data-act="lavgiorno" data-k="${g.iso}"><span class="badge db"><b>${+g.iso.slice(8)}</b><i>${MB[S.mese-1]}</i></span><span class="grow"><span class="t">${GG[lDate(g.iso).getDay()]}</span><span class="s">${esc(sub)}</span></span><span class="amt">${ore?'+'+oreF(ore):''}</span></button>`}).join('');

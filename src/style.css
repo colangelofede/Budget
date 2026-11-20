@@ -485,7 +485,7 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 .cal{gap:8px;padding:16px 12px}
 .cal-h,.cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .cal-h span{text-align:center;font-size:12px;font-weight:700;color:var(--sub)}
-.cd{height:56px;border-radius:12px;border:1px solid transparent;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;min-width:0}
+.cd{height:62px;position:relative;border-radius:12px;border:1px solid transparent;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0;min-width:0}
 .cd b{font-size:15px;font-weight:800;line-height:1}
 .cd i{font-style:normal;font-size:10.5px;font-weight:700;color:var(--sub);white-space:nowrap;overflow:hidden;max-width:100%;line-height:1.1}
 .cd.vuoto{background:transparent}
@@ -493,6 +493,11 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 .cd.fest b{color:var(--neg)}
 .cd.oggi{border:2px solid var(--ink)}
 .cd.tr{background:var(--chip)}
+/* trasferta: sigla della zona in alto, ore sotto il numero */
+.cd s{text-decoration:none;font-size:8.5px;font-weight:800;letter-spacing:.04em;color:var(--sub);line-height:1;min-height:9px}
+/* tre righe (zona, giorno, ore) a distanze uguali in tutte le caselle, anche senza trasferta */
+.cd:has(s){justify-content:space-evenly;gap:0;padding:2px 0}
+.cd:has(s) i{min-height:12px}
 .cd.warn i{color:var(--warn-ink)}
 /* guida comandi rapidi */
 .passi{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
