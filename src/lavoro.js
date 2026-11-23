@@ -69,7 +69,8 @@ function lavGiorno(D,iso,oggiIso){
     g.stato=lavBool(r.stima)?'stima':'ok';g.fonte='rec';g.assOre=+r.oreass||0;g.extra=r.extra==null||r.extra===''?null:+r.extra;g.notte=+r.notte||0;
     if(g.tipo!=='lavoro'){g.assOre=g.assOre||(tg==='feriale'?8:0);return g}
     if(g.manuale||g.trasf){
-      if(g.trasf&&!g.manuale){if(g.extra==null){g.daCompilare=!futuro&&!oggi}else Object.assign(g,lFasceExtra(iso,g.extra,g.notte))}
+      // trasferta: orari (come in sede) oppure, per i dati vecchi, ore oltre le 8
+      if(g.trasf&&!g.manuale){if(g.entrata&&g.uscita)Object.assign(g,lFasce(iso,g.entrata,g.uscita,g.pausa??(tg==='feriale'?p.pausa:0),p));else if(g.extra!=null)Object.assign(g,lFasceExtra(iso,g.extra,g.notte));else g.daCompilare=!futuro&&!oggi}
       else{g.s30=+r.s30||0;g.s40=+r.s40||0;g.s50=+r.s50||0;g.s70=+r.s70||0}
       g.ord=tg==='feriale'?8:0;return g}
     const f=lFasce(iso,g.entrata,g.uscita,g.pausa??(tg==='feriale'?p.pausa:0),p);Object.assign(g,f);if(tg!=='feriale')g.ord=0;return g;

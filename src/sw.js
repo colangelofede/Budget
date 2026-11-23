@@ -1,5 +1,5 @@
 // Copia offline dell'app. Cambia VERSIONE a ogni aggiornamento.
-const VERSIONE='finance-v9';
+const VERSIONE='finance-v10';
 const FILES=['./','./index.html','./manifest.webmanifest','./manifest-scura.webmanifest','./apple-touch-icon-f1.png','./apple-touch-icon-f1-scura.png','./icon-192-f1.png','./icon-512-f1.png','./icon-192-f1-scura.png','./icon-512-f1-scura.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSIONE).then(c=>c.addAll(FILES)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==VERSIONE).map(n=>caches.delete(n)))).then(()=>self.clients.claim()))});
