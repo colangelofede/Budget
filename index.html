@@ -1134,7 +1134,7 @@ function sheetGiorno(iso){
       vs.forEach(([a,b,pz])=>{const x=lSeg(a,b,true,pz);if(x)segs.push(x)});
       return lFasceSeg(iso,segs.concat(g.riporto||[]),p)};
     // riga di viaggio: partenza, arrivo, pausa; si elimina scorrendola verso sinistra
-    const rigaV=(a,b,pz)=>`<div class="vwrap"><span class="vdel">Elimina</span><div class="tri vrow"><div class="field"><label>Partenza</label><input type="time" data-va value="${esc(a||'')}"></div><div class="field"><label>Arrivo</label><input type="time" data-vb value="${esc(b||'')}"></div><div class="field"><label>Pausa (min)</label><input inputmode="numeric" data-vp value="${pz||0}"></div></div></div>`;
+    const rigaV=(a,b,pz)=>`<div class="vwrap"><span class="vdel">Elimina</span><div class="tri vrow"><div class="field"><label>Partenza</label><input type="time" data-va value="${esc(a||'')}"></div><div class="field"><label>Arrivo</label><input type="time" data-vb value="${esc(b||'')}"><span class="det" data-vdet></span></div><div class="field"><label>Pausa (min)</label><input inputmode="numeric" data-vp value="${pz||0}"></div></div></div>`;
     const viaggiRighe=()=>viaOn?[...el.querySelectorAll('.vrow')].map(r=>[r.querySelector('[data-va]').value,r.querySelector('[data-vb]').value,num(r.querySelector('[data-vp]').value)||0]).filter(([a,b])=>a&&b&&a!==b):[];
     const swipe=w=>{if(w.dataset.sw)return;w.dataset.sw=1;const row=w.querySelector('.vrow');let x0=null,y0=0,dx=0,lock=null;
       w.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;lock=null;row.style.transition='none'},{passive:true});
@@ -1149,7 +1149,8 @@ function sheetGiorno(iso){
     const draw=()=>{const ass=['ferie','rol','permesso'].includes(tipo)||(tipo!=='lavoro');
       $('[data-sez="lavoro"]').hidden=tipo!=='lavoro';$('[data-sez="assenza"]').hidden=tipo==='lavoro';
       $('[data-sez="orari"]').hidden=false;$('[data-sez="viaggi"]').hidden=!viaOn;
-      const oltre=viaggiRighe().filter(([a,b])=>lMin(b)<lMin(a)&&lMin(b)>0);$('[data-vnote]').hidden=!oltre.length;$('[data-vnote]').textContent=oltre.length?'Le ore dopo mezzanotte ('+oltre.map(([a,b])=>'00:00–'+b).join(', ')+') contano sul giorno dopo.':'';
+      const oltre=viaggiRighe().filter(([a,b])=>lMin(b)<lMin(a)&&lMin(b)>0);el.querySelectorAll('.vrow').forEach(r=>{const a=lMin(r.querySelector('[data-va]').value),b=lMin(r.querySelector('[data-vb]').value),d=r.querySelector('[data-vdet]');d.textContent=a!=null&&b===0&&a>0?'24:00 · mezzanotte':a!=null&&b!=null&&b<a?'del giorno dopo':''});
+      $('[data-vnote]').hidden=!oltre.length;$('[data-vnote]').textContent=oltre.length?'Le ore dopo mezzanotte ('+oltre.map(([a,b])=>'00:00–'+b).join(', ')+') contano sul giorno dopo.':'';
       const c=calc();if(!man)f={s30:c.s30,s40:c.s40,s50:c.s50,s70:c.s70};
       el.querySelectorAll('[data-fx]').forEach(r=>{const k=r.dataset.fx;r.querySelector('[data-v]').textContent=oreN(f[k]);r.querySelector('[data-e]').textContent=f[k]?eur(r2(f[k]*p.paga*(1+(+k.slice(1))/100))):'—';r.classList.toggle('on',f[k]>0);});
       $('[data-ord]').textContent=oreN(c.ord||0)+' h';$('[data-ordsub]').textContent=g.tg==='feriale'?(trasf?'Prime 8 h di giorno, lavoro o viaggio':'Orario '+p.entrata+'–'+p.uscita):(g.tg==='sabato'?'Sabato: tutto straordinario':'Festivo: tutto straordinario');
