@@ -1149,10 +1149,10 @@ function sheetGiorno(iso){
     const draw=()=>{const ass=['ferie','rol','permesso'].includes(tipo)||(tipo!=='lavoro');
       $('[data-sez="lavoro"]').hidden=tipo!=='lavoro';$('[data-sez="assenza"]').hidden=tipo==='lavoro';
       $('[data-sez="orari"]').hidden=false;$('[data-sez="viaggi"]').hidden=!viaOn;
-      const oltre=viaggiRighe().filter(([a,b])=>lMin(b)<lMin(a));$('[data-vnote]').hidden=!oltre.length;$('[data-vnote]').textContent=oltre.length?'Le ore dopo mezzanotte ('+oltre.map(([a,b])=>'00:00–'+b).join(', ')+') contano sul giorno dopo.':'';
+      const oltre=viaggiRighe().filter(([a,b])=>lMin(b)<lMin(a)&&lMin(b)>0);$('[data-vnote]').hidden=!oltre.length;$('[data-vnote]').textContent=oltre.length?'Le ore dopo mezzanotte ('+oltre.map(([a,b])=>'00:00–'+b).join(', ')+') contano sul giorno dopo.':'';
       const c=calc();if(!man)f={s30:c.s30,s40:c.s40,s50:c.s50,s70:c.s70};
       el.querySelectorAll('[data-fx]').forEach(r=>{const k=r.dataset.fx;r.querySelector('[data-v]').textContent=oreN(f[k]);r.querySelector('[data-e]').textContent=f[k]?eur(r2(f[k]*p.paga*(1+(+k.slice(1))/100))):'—';r.classList.toggle('on',f[k]>0);});
-      $('[data-ord]').textContent=oreN(c.ord||0)+' h';$('[data-ordsub]').textContent=g.tg==='feriale'?'Orario '+p.entrata+'–'+p.uscita:(g.tg==='sabato'?'Sabato: tutto straordinario':'Festivo: tutto straordinario');
+      $('[data-ord]').textContent=oreN(c.ord||0)+' h';$('[data-ordsub]').textContent=g.tg==='feriale'?(trasf?'Prime 8 h di giorno, lavoro o viaggio':'Orario '+p.entrata+'–'+p.uscita):(g.tg==='sabato'?'Sabato: tutto straordinario':'Festivo: tutto straordinario');
       $('[data-stato]').textContent=man?'CORRETTE A MANO':trasf?'TRASFERTA':'CALCOLATE';$('[data-ricalc]').hidden=!man;
       const vv=c.via||0;$('[data-nota]').textContent=(vv&&!man?'Lavoro '+oreN(r2(c.lav||0))+' h · viaggio '+oreN(r2(vv))+' h. ':'')+(man?'Hai corretto le ore: non le ricalcolo più dagli orari.':trasf?'In trasferta il viaggio conta come lavoro: inserisci inizio e fine (viaggio compreso) e le divido io nelle fasce. Con − e + le correggi a mano.':man?'Hai corretto le ore: non le ricalcolo più dagli orari.':'Le ore si dividono da sole in base all\'orario. Con − e + le correggi a mano.');
       const ore=f.s30*1.3+f.s40*1.4+f.s50*1.5+f.s70*1.7;const tot=tipo==='lavoro'?r2(ore*p.paga+(trasf?+p[trasf]:0)-(mensa?p.mensa:0)):0;
@@ -1169,11 +1169,11 @@ function sheetGiorno(iso){
       if(tipo==='lavoro'){row.mensa=mensa;row.trasferta=trasf||null;
         row.entrata=$('#g-e').value||null;row.uscita=$('#g-u').value||null;row.pausa=num($('#g-p').value)||0;
         const vs=viaggiRighe();row.viaggi=vs.length?vs.map(([a,b,pz])=>a+'-'+b+(pz?'/'+pz:'')).join(';'):null;
-        if(!(row.entrata&&row.uscita)){row.entrata=null;row.uscita=null}
+        if(!(row.entrata&&row.uscita)||row.entrata===row.uscita){row.entrata=null;row.uscita=null}
         if(man){row.manuale=true;Object.assign(row,f)}
         else if(!row.entrata&&!vs.length){if(trasf&&vecchio){row.extra=g.extra;row.notte=g.notte||0}else{toast('Inserisci gli orari di lavoro o di viaggio');return}}
         // ore dopo mezzanotte: il giorno dopo deve esistere per contarle
-        const passa=(row.entrata&&lMin(row.uscita)<lMin(row.entrata))||vs.some(([a,b])=>lMin(b)<lMin(a));
+        const passa=(row.entrata&&lMin(row.uscita)<lMin(row.entrata)&&lMin(row.uscita)>0)||vs.some(([a,b])=>lMin(b)<lMin(a)&&lMin(b)>0);
         if(passa){const d=lDate(iso);d.setDate(d.getDate()+1);const ni=lIso(d.getFullYear(),d.getMonth()+1,d.getDate());
           if(!(S.D.ore||[]).some(x=>x.id===ni))dopo={id:ni,row:{tipo:'lavoro',trasferta:trasf||null,mensa:false,manuale:false,nota:'dal giorno prima'}}}}
       else{const a=num($('#g-a').value);row.oreass=isNaN(a)?8:a}
