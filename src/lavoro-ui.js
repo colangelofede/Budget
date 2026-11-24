@@ -175,17 +175,21 @@ function vLavRilev(){
 // ---------- FOGLIO: GIORNATA ----------
 function sheetGiorno(iso){
   const g=lavGiorno(S.D,iso,isoToday());const p=g.p;let tipo=g.tipo==='riposo'?'lavoro':g.tipo,trasf=g.trasf||'',mensa=g.rec?g.mensa:(g.tg==='feriale'&&!g.trasf);
-  let man=g.manuale&&!g.trasf,f={s30:g.s30,s40:g.s40,s50:g.s50,s70:g.s70};
+  let man=!!g.manuale,f={s30:g.s30,s40:g.s40,s50:g.s50,s70:g.s70};
   const tb=(S.D.timbrature||[]).filter(x=>x.data===iso).sort((a,b)=>String(a.ora).localeCompare(String(b.ora)));
   const rilA=tb.find(x=>x.evento==='arrivo'),rilU=tb.filter(x=>x.evento==='uscita').pop();
-  const vecchio=!!(g.trasf&&!g.entrata&&g.extra!=null&&!g.manuale); // trasferta salvata con le sole ore oltre le 8
-  const ent=g.entrata||(g.tg==='feriale'&&!vecchio?p.entrata:''),usc=g.uscita||(g.tg==='feriale'&&!vecchio?p.uscita:''),pau=g.pausa??(g.tg==='feriale'?p.pausa:0);
+  const vg0=lViaggi(g.viaggi);let viaOn=vg0.length>0;
+  const vecchio=!!(g.trasf&&!g.entrata&&!vg0.length&&g.extra!=null&&!g.manuale); // trasferta salvata con le sole ore oltre le 8
+  const std=g.tg==='feriale'&&!vecchio&&!(g.trasf&&g.rec); // in trasferta niente orario standard precompilato
+  const ent=g.entrata||(std?p.entrata:''),usc=g.uscita||(std?p.uscita:''),pau=g.pausa??(g.tg==='feriale'?p.pausa:0);
   const tipi=LAV_TIPI.map(([k,l])=>`<button type="button" data-tipo="${k}" aria-pressed="${k===tipo}">${l}</button>`).join('');
   const trs=[['','Nessuna','In sede']].concat(LAV_TRASF.map(x=>[x[0],x[1],eur(+p[x[0]]||0).replace(',00','')+' al giorno'])).map(([k,l,s])=>`<button type="button" data-tr="${k}" aria-pressed="${k===trasf}"><b>${l}</b><small>${s}</small></button>`).join('');
   const fx=(k,n,sub)=>`<div class="fx" data-fx="${k}"><span class="fx-l"><b>${n}</b><small>${sub}</small></span><span class="fx-st"><button type="button" data-d="-1" aria-label="Togli un quarto d'ora a ${n}">−</button><span class="num" data-v></span><button type="button" data-d="1" aria-label="Aggiungi un quarto d'ora a ${n}">+</button></span><span class="fx-e num" data-e></span></div>`;
   const html=`<div class="catpick" data-g="tipo">${tipi}</div>
    <div data-sez="lavoro">
     <div class="tri" data-sez="orari"><div class="field"><label for="g-e">Entrata</label><input id="g-e" type="time" value="${esc(ent)}">${rilA?`<span class="det">${LAV_ICON.pin.replace(/20/g,'13')} rilevata ${esc(rilA.ora)}</span>`:''}</div><div class="field"><label for="g-u">Uscita</label><input id="g-u" type="time" value="${esc(usc)}">${rilU?`<span class="det">${LAV_ICON.pin.replace(/20/g,'13')} rilevata ${esc(rilU.ora)}</span>`:''}</div><div class="field"><label for="g-p">Pausa (min)</label><input id="g-p" inputmode="numeric" value="${pau}"><span class="det">dalle ${esc(p.pausainizio)}</span></div></div>
+    <button type="button" class="switch" role="switch" data-via aria-checked="${viaOn}"><span class="sw-t"><b>Viaggio</b><span class="small muted">Ore di viaggio, pagate come il lavoro</span></span><span class="sw-k"></span></button>
+    <div class="viaggi" data-sez="viaggi"><div class="vrows" data-vrows></div>${g.riporto&&g.riporto.length?`<p class="note">Dal giorno prima, già contate qui: ${g.riporto.map(x=>'00:00–'+lHm(x.e)+(x.via?' viaggio':' lavoro')).join(', ')}.</p>`:''}<p class="note" data-vnote></p><p class="note" data-vhint>Per eliminare un viaggio scorri la riga verso sinistra.</p><button type="button" class="link" data-vadd>+ Aggiungi viaggio</button></div>
     <section class="card fxc"><div class="row-head"><h2>Ore della giornata</h2><span class="chip acc" data-stato></span></div>
      <div class="fx base"><span class="fx-l"><b>Ordinarie</b><small data-ordsub></small></span><span class="fx-e num" data-ord></span></div>
      ${fx('s30','+30%','Feriale fino a 10 h')}${fx('s40','+40%','Feriale oltre le 10 h')}${fx('s50','+50%','Sabato, prime 8 h')}${fx('s70','+70%','Notte 22–06, sabato oltre 8 h, festivi')}
@@ -200,16 +204,33 @@ function sheetGiorno(iso){
     const $=q=>el.querySelector(q);
     const calc=()=>{if(tipo!=='lavoro')return {s30:0,s40:0,s50:0,s70:0,ord:0};
       if(man)return Object.assign({},f,{ord:g.tg==='feriale'?8:0});
-      if(trasf&&vecchio&&!$('#g-e').value&&!$('#g-u').value)return Object.assign(lFasceExtra(iso,g.extra,g.notte),{ord:g.tg==='feriale'?8:0});
-      return lFasce(iso,$('#g-e').value,$('#g-u').value,num($('#g-p').value)||0,p)};
+      const vs=viaggiRighe();
+      if(trasf&&vecchio&&!$('#g-e').value&&!$('#g-u').value&&!vs.length)return Object.assign(lFasceExtra(iso,g.extra,g.notte),{ord:g.tg==='feriale'?8:0});
+      const segs=[];const w=lSeg($('#g-e').value,$('#g-u').value,false,num($('#g-p').value)||0);if(w)segs.push(w);
+      vs.forEach(([a,b,pz])=>{const x=lSeg(a,b,true,pz);if(x)segs.push(x)});
+      return lFasceSeg(iso,segs.concat(g.riporto||[]),p)};
+    // riga di viaggio: partenza, arrivo, pausa; si elimina scorrendola verso sinistra
+    const rigaV=(a,b,pz)=>`<div class="vwrap"><span class="vdel">Elimina</span><div class="tri vrow"><div class="field"><label>Partenza</label><input type="time" data-va value="${esc(a||'')}"></div><div class="field"><label>Arrivo</label><input type="time" data-vb value="${esc(b||'')}"></div><div class="field"><label>Pausa (min)</label><input inputmode="numeric" data-vp value="${pz||0}"></div></div></div>`;
+    const viaggiRighe=()=>viaOn?[...el.querySelectorAll('.vrow')].map(r=>[r.querySelector('[data-va]').value,r.querySelector('[data-vb]').value,num(r.querySelector('[data-vp]').value)||0]).filter(([a,b])=>a&&b&&a!==b):[];
+    const swipe=w=>{if(w.dataset.sw)return;w.dataset.sw=1;const row=w.querySelector('.vrow');let x0=null,y0=0,dx=0,lock=null;
+      w.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0;lock=null;row.style.transition='none'},{passive:true});
+      w.addEventListener('touchmove',e=>{if(x0==null)return;const mx=e.touches[0].clientX-x0,my=e.touches[0].clientY-y0;if(lock==null&&Math.abs(mx)+Math.abs(my)>8)lock=Math.abs(mx)>Math.abs(my)?'x':'y';if(lock!=='x')return;e.preventDefault();dx=Math.min(0,mx);row.style.transform=`translateX(${dx}px)`},{passive:false});
+      w.addEventListener('touchend',()=>{if(x0==null)return;x0=null;row.style.transition='transform .2s ease';
+        if(lock==='x'&&dx<-w.offsetWidth*0.35){row.style.transform='translateX(-110%)';setTimeout(()=>{w.remove();if(!el.querySelector('.vwrap'))$('[data-vrows]').insertAdjacentHTML('beforeend',rigaV());bindV();draw()},180)}
+        else row.style.transform=''})};
+    const bindV=()=>{el.querySelectorAll('.vrow input').forEach(i=>i.oninput=()=>draw());el.querySelectorAll('.vwrap').forEach(swipe)};
+    $('[data-vrows]').innerHTML=(vg0.length?vg0:[['','',0]]).map(([a,b,pz])=>rigaV(a,b,pz)).join('');bindV();
+    $('[data-via]').onclick=()=>{viaOn=!viaOn;$('[data-via]').setAttribute('aria-checked',viaOn);draw()};
+    $('[data-vadd]').onclick=()=>{$('[data-vrows]').insertAdjacentHTML('beforeend',rigaV());bindV();draw()};
     const draw=()=>{const ass=['ferie','rol','permesso'].includes(tipo)||(tipo!=='lavoro');
       $('[data-sez="lavoro"]').hidden=tipo!=='lavoro';$('[data-sez="assenza"]').hidden=tipo==='lavoro';
-      $('[data-sez="orari"]').hidden=false;
+      $('[data-sez="orari"]').hidden=false;$('[data-sez="viaggi"]').hidden=!viaOn;
+      const oltre=viaggiRighe().filter(([a,b])=>lMin(b)<lMin(a));$('[data-vnote]').hidden=!oltre.length;$('[data-vnote]').textContent=oltre.length?'Le ore dopo mezzanotte ('+oltre.map(([a,b])=>'00:00–'+b).join(', ')+') contano sul giorno dopo.':'';
       const c=calc();if(!man)f={s30:c.s30,s40:c.s40,s50:c.s50,s70:c.s70};
       el.querySelectorAll('[data-fx]').forEach(r=>{const k=r.dataset.fx;r.querySelector('[data-v]').textContent=oreN(f[k]);r.querySelector('[data-e]').textContent=f[k]?eur(r2(f[k]*p.paga*(1+(+k.slice(1))/100))):'—';r.classList.toggle('on',f[k]>0);});
       $('[data-ord]').textContent=oreN(c.ord||0)+' h';$('[data-ordsub]').textContent=g.tg==='feriale'?'Orario '+p.entrata+'–'+p.uscita:(g.tg==='sabato'?'Sabato: tutto straordinario':'Festivo: tutto straordinario');
       $('[data-stato]').textContent=man?'CORRETTE A MANO':trasf?'TRASFERTA':'CALCOLATE';$('[data-ricalc]').hidden=!man;
-      $('[data-nota]').textContent=man?'Hai corretto le ore: non le ricalcolo più dagli orari.':trasf?'In trasferta il viaggio conta come lavoro: inserisci inizio e fine (viaggio compreso) e le divido io nelle fasce. Con − e + le correggi a mano.':man?'Hai corretto le ore: non le ricalcolo più dagli orari.':'Le ore si dividono da sole in base all\'orario. Con − e + le correggi a mano.';
+      const vv=c.via||0;$('[data-nota]').textContent=(vv&&!man?'Lavoro '+oreN(r2(c.lav||0))+' h · viaggio '+oreN(r2(vv))+' h. ':'')+(man?'Hai corretto le ore: non le ricalcolo più dagli orari.':trasf?'In trasferta il viaggio conta come lavoro: inserisci inizio e fine (viaggio compreso) e le divido io nelle fasce. Con − e + le correggi a mano.':man?'Hai corretto le ore: non le ricalcolo più dagli orari.':'Le ore si dividono da sole in base all\'orario. Con − e + le correggi a mano.');
       const ore=f.s30*1.3+f.s40*1.4+f.s50*1.5+f.s70*1.7;const tot=tipo==='lavoro'?r2(ore*p.paga+(trasf?+p[trasf]:0)-(mensa?p.mensa:0)):0;
       $('[data-tot]').textContent=tipo==='lavoro'?sgn(tot)+' lordi':oreF(num($('#g-a').value)||0)+' di '+(LAV_TIPI.find(x=>x[0]===tipo)||[0,''])[1].toLowerCase()};
     el.querySelectorAll('[data-tipo]').forEach(b=>b.onclick=()=>{tipo=b.dataset.tipo;el.querySelectorAll('[data-tipo]').forEach(x=>x.setAttribute('aria-pressed',x===b));draw()});
@@ -219,14 +240,20 @@ function sheetGiorno(iso){
     $('[data-mensa]').onclick=()=>{mensa=!mensa;$('[data-mensa]').setAttribute('aria-checked',mensa);draw()};
     ['#g-e','#g-u','#g-p','#g-a'].forEach(q=>$(q).addEventListener('input',draw));
     if($('[data-del]'))$('[data-del]').onclick=async()=>{close();await del('ore/'+iso);toast('Giornata riportata all\'orario standard')};
-    $('[data-save]').onclick=async()=>{
-      const row={tipo,entrata:null,uscita:null,pausa:null,s30:null,s40:null,s50:null,s70:null,manuale:false,trasferta:null,mensa:false,extra:null,notte:null,oreass:null,stima:false,nota:g.rec&&g.rec.nota||''};
+    $('[data-save]').onclick=async()=>{let dopo=null;
+      const row={tipo,entrata:null,uscita:null,pausa:null,s30:null,s40:null,s50:null,s70:null,manuale:false,trasferta:null,mensa:false,extra:null,notte:null,viaggi:null,oreass:null,stima:false,nota:g.rec&&g.rec.nota||''};
       if(tipo==='lavoro'){row.mensa=mensa;row.trasferta=trasf||null;
         row.entrata=$('#g-e').value||null;row.uscita=$('#g-u').value||null;row.pausa=num($('#g-p').value)||0;
+        const vs=viaggiRighe();row.viaggi=vs.length?vs.map(([a,b,pz])=>a+'-'+b+(pz?'/'+pz:'')).join(';'):null;
+        if(!(row.entrata&&row.uscita)){row.entrata=null;row.uscita=null}
         if(man){row.manuale=true;Object.assign(row,f)}
-        else if(!row.entrata||!row.uscita){if(trasf&&vecchio){row.extra=g.extra;row.notte=g.notte||0}else{toast('Inserisci inizio e fine');return}}}
+        else if(!row.entrata&&!vs.length){if(trasf&&vecchio){row.extra=g.extra;row.notte=g.notte||0}else{toast('Inserisci gli orari di lavoro o di viaggio');return}}
+        // ore dopo mezzanotte: il giorno dopo deve esistere per contarle
+        const passa=(row.entrata&&lMin(row.uscita)<lMin(row.entrata))||vs.some(([a,b])=>lMin(b)<lMin(a));
+        if(passa){const d=lDate(iso);d.setDate(d.getDate()+1);const ni=lIso(d.getFullYear(),d.getMonth()+1,d.getDate());
+          if(!(S.D.ore||[]).some(x=>x.id===ni))dopo={id:ni,row:{tipo:'lavoro',trasferta:trasf||null,mensa:false,manuale:false,nota:'dal giorno prima'}}}}
       else{const a=num($('#g-a').value);row.oreass=isNaN(a)?8:a}
-      close();await put('ore/'+iso,row);toast('Giornata salvata')};
+      close();await batch(async()=>{await put('ore/'+iso,row);if(dopo)await put('ore/'+dopo.id,dopo.row)});toast(dopo?'Giornata salvata: le ore dopo mezzanotte contano su '+giornoLabel(dopo.id):'Giornata salvata')};
     draw()});
 }
 // ---------- FOGLIO: TRASFERTA ----------

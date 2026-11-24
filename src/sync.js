@@ -26,7 +26,7 @@ function rawToD(raw){
   // sezione Lavoro (fogli Ore, Timbrature, Lavoro, Voci, Saldi)
   const dIso=v=>{const t=st(v);return /^\d{4}-\d{2}-\d{2}/.test(t)?t.slice(0,10):t};
   const hm=v=>{const t=st(v);const m=t.match(/(\d{1,2}):(\d{2})/);return m?m[1].padStart(2,'0')+':'+m[2]:(t||null)};
-  const ore=(raw.ore||[]).filter(x=>x.id).map(x=>({id:dIso(x.id),tipo:st(x.tipo)||'lavoro',entrata:x.entrata?hm(x.entrata):null,uscita:x.uscita?hm(x.uscita):null,pausa:nz(x.pausa),s30:nz(x.s30),s40:nz(x.s40),s50:nz(x.s50),s70:nz(x.s70),manuale:x.manuale,trasferta:x.trasferta?st(x.trasferta):null,mensa:x.mensa,extra:nz(x.extra),notte:nz(x.notte),oreass:nz(x.oreass),stima:x.stima,nota:st(x.nota)}));
+  const ore=(raw.ore||[]).filter(x=>x.id).map(x=>({id:dIso(x.id),tipo:st(x.tipo)||'lavoro',entrata:x.entrata?hm(x.entrata):null,uscita:x.uscita?hm(x.uscita):null,pausa:nz(x.pausa),s30:nz(x.s30),s40:nz(x.s40),s50:nz(x.s50),s70:nz(x.s70),manuale:x.manuale,trasferta:x.trasferta?st(x.trasferta):null,mensa:x.mensa,extra:nz(x.extra),notte:nz(x.notte),viaggi:x.viaggi?st(x.viaggi):null,oreass:nz(x.oreass),stima:x.stima,nota:st(x.nota)}));
   const timbrature=(raw.timbrature||[]).filter(x=>x.id).map(x=>({id:st(x.id),data:dIso(x.data),ora:hm(x.ora),evento:st(x.evento)}));
   const lavoro=(raw.lavoro||[]).filter(x=>x.id).map(x=>Object.assign({},x,{id:st(x.id),dal:st(x.dal).slice(0,7)}));
   const voci=(raw.voci||[]).filter(x=>x.id).map(x=>({id:st(x.id),anno:nz(x.anno),mese:nz(x.mese),descrizione:st(x.descrizione),importo:nz(x.importo)||0,noinps:x.noinps}));

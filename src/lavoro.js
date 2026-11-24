@@ -18,6 +18,7 @@ function lpad(n){return String(n).padStart(2,'0')}
 function lIso(y,m,g){return y+'-'+lpad(m)+'-'+lpad(g)}
 function lDate(iso){const [y,m,g]=iso.split('-').map(Number);return new Date(y,m-1,g)}
 function lDim(y,m){return new Date(y,m,0).getDate()}
+function lHm(m){m=Math.round(+m||0);return lpad(Math.floor(m/60))+':'+lpad(m%60)}
 function lMin(t){if(t==null||t==='')return null;const m=String(t).match(/^(\d{1,2})[:.,](\d{2})/);if(!m)return null;return +m[1]*60+ +m[2]}
 function lHHMM(min){min=((min%1440)+1440)%1440;return lpad(Math.floor(min/60))+':'+lpad(min%60)}
 function lYm(y,m){return y+'-'+lpad(m)}
@@ -40,18 +41,35 @@ function lavPar(D,anno,mese){const ym=lYm(anno,mese);const rows=((D&&D.lavoro)||
 function lAddizMese(p,mese){const s=String(p.addizmesi||'');return s.split(/[,;\s]+/).filter(Boolean).some(t=>{const r=t.split('-').map(Number);return r.length===2?mese>=r[0]&&mese<=r[1]:mese===r[0]})}
 
 // Divide le ore lavorate nelle fasce, minuto per minuto. Ritorna ore decimali.
-function lFasce(iso,entrata,uscita,pausa,p){
-  const E=lMin(entrata),U0=lMin(uscita);const z={ord:0,s30:0,s40:0,s50:0,s70:0,lav:0};if(E==null||U0==null)return z;
-  let U=U0;if(U<=E)U+=1440;const tg=lTipoG(iso);const ps=lMin(p.pausainizio)??735,pe=ps+(+pausa||0);
-  const m={ord:0,s30:0,s40:0,s50:0,s70:0};let w=0;
-  for(let t=E;t<U;t++){if(pausa&&t>=ps&&t<pe)continue;const tod=t%1440,night=tod>=1320||tod<360;
-    if(tg==='feriale'){if(w<480)m.ord++;else{const k=w-480;if(night)m.s70++;else if(k<120)m.s30++;else m.s40++}}
-    else if(tg==='sabato'){if(night||w>=480)m.s70++;else m.s50++}
-    else m.s70++;
-    w++}
-  const a=Math.max(1,+p.arrot||1),fl=x=>Math.floor(x/a)*a/60;
-  return {ord:m.ord/60,s30:fl(m.s30),s40:fl(m.s40),s50:fl(m.s50),s70:fl(m.s70),lav:w/60};
+// Fasce di una giornata da segmenti in minuti {s,e,via,pausa} (0–1440: le ore dopo mezzanotte contano sul giorno dopo).
+// Regole: 22–06 sempre +70%; le ordinarie (8 h nei feriali) si prendono solo dalle ore di giorno, in ordine di orario;
+// feriale: poi 2 h +30% e oltre +40%; sabato: prime 8 h di giorno +50%, poi +70%; domenica e festivi tutto +70%. Viaggio = lavoro.
+function lFasceSeg(iso,segs,p){
+  const tg=lTipoG(iso);const z={ord:0,s30:0,s40:0,s50:0,s70:0,lav:0,via:0};if(!segs||!segs.length)return z;
+  const ps=lMin(p.pausainizio)??735;const fl=new Uint8Array(1440);
+  // pausa: lavoro dalle pausainizio; viaggio dalle pausainizio se il viaggio la comprende, altrimenti a metà viaggio
+  segs.forEach(g=>{const pz=+g.pausa||0,w0=!g.via||(g.s<=ps&&ps<g.e)?ps:Math.floor((g.s+g.e-pz)/2),a=Math.max(0,g.s),b=Math.min(1440,g.e);for(let t=a;t<b;t++){if(pz&&t>=w0&&t<w0+pz)continue;fl[t]=g.via?2:1}});
+  const m={ord:0,s30:0,s40:0,s50:0,s70:0};let w=0,lav=0,via=0;
+  for(let t=0;t<1440;t++){if(!fl[t])continue;if(fl[t]===2)via++;else lav++;const night=t>=1320||t<360;
+    if(tg==='feriale'){if(night)m.s70++;else{if(w<480)m.ord++;else if(w-480<120)m.s30++;else m.s40++;w++}}
+    else if(tg==='sabato'){if(night)m.s70++;else{if(w<480)m.s50++;else m.s70++;w++}}
+    else m.s70++}
+  const a=Math.max(1,+p.arrot||1),f=x=>Math.floor(x/a)*a/60;
+  return {ord:m.ord/60,s30:f(m.s30),s40:f(m.s40),s50:f(m.s50),s70:f(m.s70),lav:lav/60,via:via/60};
 }
+// segmento da due orari: se la fine è prima dell'inizio passa la mezzanotte (e > 1440)
+function lSeg(a,b,via,pausa){const s=lMin(a),e=lMin(b);if(s==null||e==null||s===e)return null;return {s,e:e<s?e+1440:e,via:!!via,pausa:+pausa||0}}
+// "07:00-10:00/30;21:00-03:30" → [[partenza, arrivo, pausa]]
+function lViaggi(str){return String(str||'').split(/[;,]/).map(x=>x.match(/(\d{1,2}[:.]\d{2})\s*-\s*(\d{1,2}[:.]\d{2})(?:\s*\/\s*(\d+))?/)).filter(Boolean).map(m=>[m[1].replace('.',':'),m[2].replace('.',':'),+m[3]||0])}
+// segmenti propri di una riga del foglio Ore (lavoro + viaggi), con le parti oltre mezzanotte
+function lSegRiga(r,p,tg){const out=[];if(!r||(r.tipo&&r.tipo!=='lavoro')||lavBool(r.manuale))return out;
+  if(r.entrata&&r.uscita){const x=lSeg(r.entrata,r.uscita,false,r.pausa==null||r.pausa===''?(tg==='feriale'?p.pausa:0):r.pausa);if(x)out.push(x)}
+  lViaggi(r.viaggi).forEach(([a,b,pz])=>{const x=lSeg(a,b,true,pz);if(x)out.push(x)});return out}
+// parti dopo mezzanotte del giorno prima
+function lRiporto(D,iso){const d=lDate(iso);d.setDate(d.getDate()-1);const pi=lIso(d.getFullYear(),d.getMonth()+1,d.getDate());
+  const r=((D&&D.ore)||[]).find(x=>x.id===pi);if(!r)return [];const pp=lavPar(D,d.getFullYear(),d.getMonth()+1);
+  return lSegRiga(r,pp,lTipoG(pi)).filter(x=>x.e>1440).map(x=>({s:0,e:x.e-1440,via:x.via,pausa:0}))}
+function lFasce(iso,entrata,uscita,pausa,p){const x=lSeg(entrata,uscita,false,pausa);return lFasceSeg(iso,x?[x]:[],p)}
 // Straordinario inserito a numero (trasferta): ore oltre le 8 (feriale) o ore lavorate (sabato/festivi), di cui notturne
 function lFasceExtra(iso,ore,notte){const tg=lTipoG(iso);ore=Math.max(0,+ore||0);notte=Math.min(ore,Math.max(0,+notte||0));const d=ore-notte;
   if(tg==='feriale')return {s30:Math.min(2,d),s40:Math.max(0,d-2),s50:0,s70:notte};
@@ -68,12 +86,14 @@ function lavGiorno(D,iso,oggiIso){
     g.tipo=r.tipo||'lavoro';g.trasf=r.trasferta||null;g.mensa=lavBool(r.mensa);g.manuale=lavBool(r.manuale);g.entrata=r.entrata||null;g.uscita=r.uscita||null;g.pausa=r.pausa==null||r.pausa===''?null:+r.pausa;
     g.stato=lavBool(r.stima)?'stima':'ok';g.fonte='rec';g.assOre=+r.oreass||0;g.extra=r.extra==null||r.extra===''?null:+r.extra;g.notte=+r.notte||0;
     if(g.tipo!=='lavoro'){g.assOre=g.assOre||(tg==='feriale'?8:0);return g}
-    if(g.manuale||g.trasf){
-      // trasferta: orari (come in sede) oppure, per i dati vecchi, ore oltre le 8
-      if(g.trasf&&!g.manuale){if(g.entrata&&g.uscita)Object.assign(g,lFasce(iso,g.entrata,g.uscita,g.pausa??(tg==='feriale'?p.pausa:0),p));else if(g.extra!=null)Object.assign(g,lFasceExtra(iso,g.extra,g.notte));else g.daCompilare=!futuro&&!oggi}
-      else{g.s30=+r.s30||0;g.s40=+r.s40||0;g.s50=+r.s50||0;g.s70=+r.s70||0}
-      g.ord=tg==='feriale'?8:0;return g}
-    const f=lFasce(iso,g.entrata,g.uscita,g.pausa??(tg==='feriale'?p.pausa:0),p);Object.assign(g,f);if(tg!=='feriale')g.ord=0;return g;
+    g.viaggi=r.viaggi||'';
+    if(g.manuale){g.s30=+r.s30||0;g.s40=+r.s40||0;g.s50=+r.s50||0;g.s70=+r.s70||0;g.ord=tg==='feriale'?8:0;return g}
+    // orari di lavoro + viaggi del giorno + parti dopo mezzanotte del giorno prima
+    const own=lSegRiga(r,p,tg),rip=lRiporto(D,iso);g.riporto=rip;
+    if(own.length||rip.length)Object.assign(g,lFasceSeg(iso,own.concat(rip),p));
+    else if(g.trasf&&g.extra!=null){Object.assign(g,lFasceExtra(iso,g.extra,g.notte));g.ord=tg==='feriale'?8:0}
+    if(g.trasf&&!own.length&&g.extra==null)g.daCompilare=!futuro&&!oggi;
+    return g;
   }
   // timbrature del giorno (Comandi rapidi)
   const tb=((D&&D.timbrature)||[]).filter(x=>x.data===iso).sort((a,b)=>String(a.ora).localeCompare(String(b.ora)));
@@ -91,13 +111,13 @@ function lavOggiIso(oggi){return lIso(oggi.getFullYear(),oggi.getMonth()+1,oggi.
 // Riepilogo del mese e busta stimata
 function lavMese(D,anno,mese,oggi){
   const oi=lavOggiIso(oggi||new Date());const p=lavPar(D,anno,mese);const giorni=[];
-  const t={s30:0,s40:0,s50:0,s70:0,mensa:0,trasf:{itg:0,itn:0,eu:0,extra:0,rischio:0},lavorati:0,lavorativi:0,prev:{s30:0,s40:0,s50:0,s70:0,mensa:0},daConf:0,daCompilare:0,ferie:0,rol:0};
+  const t={s30:0,s40:0,s50:0,s70:0,mensa:0,trasf:{itg:0,itn:0,eu:0,extra:0,rischio:0},lavorati:0,lavorativi:0,via:0,prev:{s30:0,s40:0,s50:0,s70:0,mensa:0},daConf:0,daCompilare:0,ferie:0,rol:0};
   for(let g=1;g<=lDim(anno,mese);g++){const iso=lIso(anno,mese,g);const x=lavGiorno(D,iso,oi);giorni.push(x);
     if(x.tg==='feriale')t.lavorativi++;
     if(x.tipo==='ferie')t.ferie+=x.assOre;if(x.tipo==='rol')t.rol+=x.assOre;
     if(x.tipo!=='lavoro')continue;
     const prevista=x.stato==='previsto'||x.stato==='oggi';
-    ['s30','s40','s50','s70'].forEach(k=>{t[k]+=x[k];if(prevista)t.prev[k]+=x[k]});
+    ['s30','s40','s50','s70'].forEach(k=>{t[k]+=x[k];if(prevista)t.prev[k]+=x[k]});t.via+=x.via||0;
     if(x.mensa){t.mensa++;if(prevista)t.prev.mensa++}
     if(x.trasf&&t.trasf[x.trasf]!=null)t.trasf[x.trasf]++;
     if(!prevista&&(x.ord>0||x.s30+x.s40+x.s50+x.s70>0||x.trasf))t.lavorati++;
@@ -141,4 +161,4 @@ function lavSaldi(D,anno,mese,oggi){
     for(let g=1;g<=lDim(y,m);g++){const x=lavGiorno(D,lIso(y,m,g),oi);if(x.tipo==='ferie')fe-=x.assOre;if(x.tipo==='rol')ro-=x.assOre}}
   return {ferie:lr2(fe),rol:lr2(ro),ref}
 }
-if(typeof module!=='undefined')module.exports={lavGiorno,lavMese,lavBusta,lavPar,lFasce,lFasceExtra,lFestivi,lTipoG,lavSaldi,stimaNettoLav,LAV_PAR0};
+if(typeof module!=='undefined')module.exports={lFasceSeg,lSeg,lViaggi,lRiporto,lavGiorno,lavMese,lavBusta,lavPar,lFasce,lFasceExtra,lFestivi,lTipoG,lavSaldi,stimaNettoLav,LAV_PAR0};

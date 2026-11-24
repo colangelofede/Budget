@@ -449,6 +449,12 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 /* blocchi del foglio Giornata: stessa distanza del resto del foglio */
 [data-sez="lavoro"],[data-sez="assenza"]{display:flex;flex-direction:column;gap:14px}
 /* trasferta: nome e tariffa, due colonne uguali */
+.viaggi{display:flex;flex-direction:column;gap:10px}
+.vrows{display:flex;flex-direction:column;gap:10px}
+.vwrap{position:relative;overflow:hidden}
+.vdel{position:absolute;left:0;right:0;bottom:0;top:30px;background:var(--neg);color:#fff;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 18px 16px;font-size:15px;font-weight:700;border-radius:14px}
+.vrow{position:relative;background:var(--bg);touch-action:pan-y}
+.viaggi .link{align-self:flex-start}
 .cmp-t{margin:6px 0 -6px;font-size:14px;color:var(--sub)}
 .cmp-t b{color:var(--ink)}
 .trgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
