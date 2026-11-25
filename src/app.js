@@ -395,7 +395,7 @@ function regFiltra(rows){const F=S.regF;const q=(S.regQ||'').trim().toLowerCase(
   if(q)rows=rows.filter(r=>regDesc(r).toLowerCase().includes(q));
   rows.forEach((r,i)=>r._i=i);rows.sort((a,b)=>{const da=/^\d{4}-\d{2}-\d{2}/.test(a.data||'')?a.data.slice(0,10):'',db=/^\d{4}-\d{2}-\d{2}/.test(b.data||'')?b.data.slice(0,10):'';if(!da!==!db)return da?1:-1;return db.localeCompare(da)||a._i-b._i});
   return rows}
-// risultati del Registro: mese scelto, oppure tutto l'anno se c'è una ricerca; totale se c'è un filtro di categoria o una ricerca
+// risultati del Registro: mese scelto, oppure tutto l'anno se c'è una ricerca; totale se c'è un filtro di categoria, di metodo o una ricerca
 function regRisultati(){
   const q=(S.regQ||'').trim();const mesi=q?[12,11,10,9,8,7,6,5,4,3,2,1]:[S.mese];
   const t={sp:0,res:0,pre:0,ent:0,n:0};let lista='';
@@ -406,7 +406,7 @@ function regRisultati(){
   else if(!t.n)lista=`<p class="sec-title">Risultati</p><section class="card tight"><div class="list"><p class="empty">Nessun movimento del ${S.anno} contiene "${esc(q)}".</p></div></section>`;
   let tot='';
   if(!q){const br=budResiduo(S.anno,S.mese,S.regCat);if(br&&S.regF!=='entrate'&&S.regF!=='daconf'){t.pre+=br;t.bud=br}}
-  if(S.regCat!=='tutte'||q){const net=r2(t.sp-t.res);
+  if(S.regCat!=='tutte'||S.regMet!=='tutti'||q){const net=r2(t.sp-t.res);
     const chi=[S.regCat!=='tutte'?esc(catName(S.regCat)):'',q?'"'+esc(q)+'"':'',S.regMet!=='tutti'?esc(S.regMet):''].filter(Boolean).join(' · ');
     const det=[`${t.n} ${t.n===1?'movimento':'movimenti'}`,t.res?`storni e resi −${eur(r2(t.res))} già sottratti`:'',t.ent?`entrate +${eur(r2(t.ent))}`:''].filter(Boolean).join(' · ');
     tot=`<section class="card" aria-label="Totale del filtro"><div class="row-head"><div><p class="eyebrow">Speso · ${chi}</p><span class="num" style="font-size:24px;font-weight:800">${eur(net)}</span><p class="note" style="margin-top:2px">${q?'Tutto il '+S.anno:MESI[S.mese-1]+' '+S.anno}</p></div>${t.pre?`<div style="text-align:right"><p class="eyebrow">Previste</p><span class="num" style="font-size:17px;font-weight:800">${eur(r2(t.pre))}</span><p class="note" style="margin-top:2px">${t.bud?'budget non ancora speso':'da pagare'}</p></div>`:''}</div>${t.bud?`<p class="note">In conto per ${MESI[S.mese-1]}: <strong class="num">${eur(r2(net+t.pre))}</strong> finché non chiudi il mese</p>`:''}${t.n?`<p class="note">${det}</p>`:''}</section>`}
