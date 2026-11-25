@@ -7,9 +7,9 @@ const LAV_TRASF=[['itg','IT giorno','In Italia, rientro a casa in giornata','IT'
 const LAV_TIPI=[['lavoro','Lavoro'],['ferie','Ferie'],['rol','ROL'],['permesso','Permesso'],['malattia','Malattia'],['congedo','Congedo'],['festivo','Festivo']];
 // Parametri della busta (dalla busta di Settembre 2026). Una riga del foglio "Lavoro" vale dal mese "dal" in poi.
 const LAV_PAR0={dal:'2000-01',paga:20.66717,minimo:2370.33,premio:37.18,mensa:2.72,indmensa:1.34,cometa:1.2,ivs:9.19,cigs:0.3,
-  addiz:144.14,addizmesi:'1-11',esenteit:0,esenteest:25.82,ivsagg:1,ivsaggsoglia:4685,arrot:15,itg:22,itn:39,eu:49,extra:65,rischio:75,feriemese:14,rolmese:8.66667,
+  addiz:144.14,addizmesi:'1-11',esenteit:0,esenteest:25.82,ivsagg:1,ivsaggsoglia:4685,arrot:15,arrottrasf:30,itg:22,itn:39,eu:49,extra:65,rischio:75,feriemese:14,rolmese:8.66667,
   entrata:'08:00',uscita:'17:15',pausa:30,pausainizio:'12:15',sedelat:null,sedelon:null,raggio:1};
-const LAV_NUM=['esenteit','esenteest','ivsagg','ivsaggsoglia','paga','minimo','premio','mensa','indmensa','cometa','ivs','cigs','addiz','arrot','itg','itn','eu','extra','rischio','feriemese','rolmese','pausa','sedelat','sedelon','raggio'];
+const LAV_NUM=['esenteit','esenteest','ivsagg','ivsaggsoglia','paga','minimo','premio','mensa','indmensa','cometa','ivs','cigs','addiz','arrot','arrottrasf','itg','itn','eu','extra','rischio','feriemese','rolmese','pausa','sedelat','sedelon','raggio'];
 // Scaglioni IRPEF mensili 2026 (23% fino a 28.000, 33% fino a 50.000, 43% oltre), verificati sulle buste Lug–Set 2026
 const LAV_IRPEF=[[28000/12,.23],[50000/12,.33],[Infinity,.43]];
 
@@ -46,9 +46,12 @@ function lAddizMese(p,mese){const s=String(p.addizmesi||'');return s.split(/[,;\
 // feriale: poi 2 h +30% e oltre +40%; sabato: prime 8 h di giorno +50%, poi +70%; domenica e festivi tutto +70%. Viaggio = lavoro.
 // Arrotondamento come la timbratura: inizio al quarto d'ora successivo, fine al quarto d'ora precedente;
 // in sede (feriale) un anticipo sull'orario standard conta solo se è di almeno 30 minuti (7:44 → 8:00, 7:29 → 7:30).
-function lArrotonda(segs,p,tg,sede){const a=Math.max(1,+p.arrot||15),std=lMin(p.entrata)??480;
-  return (segs||[]).map(g=>{let s=g.s;if(sede&&!g.via&&tg==='feriale'&&s<std&&std-s<30)s=std;else s=Math.ceil(s/a)*a;
-    const e=Math.floor(g.e/a)*a;return Object.assign({},g,{s,e})}).filter(g=>g.e>g.s)}
+// sede: inizio al quarto d'ora dopo, fine al quarto d'ora prima (badge). Trasferta: inizio alla mezz'ora prima, fine alla mezz'ora dopo.
+function lArrotonda(segs,p,tg,sede){const a=Math.max(1,+p.arrot||15),at=Math.max(1,+p.arrottrasf||30),std=lMin(p.entrata)??480;
+  return (segs||[]).map(g=>{let s=g.s,e=g.e;
+    if(!sede){s=Math.floor(s/at)*at;e=Math.ceil(e/at)*at}
+    else{if(!g.via&&tg==='feriale'&&s<std&&std-s<30)s=std;else s=Math.ceil(s/a)*a;e=Math.floor(e/a)*a}
+    return Object.assign({},g,{s,e})}).filter(g=>g.e>g.s)}
 function lFasceSeg(iso,segs,p,sede){
   const tg=lTipoG(iso);const z={ord:0,s30:0,s40:0,s50:0,s70:0,lav:0,via:0,conta:[]};if(!segs||!segs.length)return z;
   segs=lArrotonda(segs,p,tg,sede!==false);if(!segs.length)return z;
