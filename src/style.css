@@ -449,6 +449,8 @@ body{height:100%;overflow:hidden;background:var(--bg)}
 /* blocchi del foglio Giornata: stessa distanza del resto del foglio */
 [data-sez="lavoro"],[data-sez="assenza"]{display:flex;flex-direction:column;gap:14px}
 /* trasferta: nome e tariffa, due colonne uguali */
+.rapido-g{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.rapido-g .pill-btn{height:54px;width:100%;justify-content:center}
 .viaggi{display:flex;flex-direction:column;gap:10px}
 .vrows{display:flex;flex-direction:column;gap:10px}
 .vwrap{position:relative;overflow:hidden}
